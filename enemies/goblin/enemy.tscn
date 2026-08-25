@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://dj3yutxj470pi" path="res://enemies/goblin/enemy.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://cbbymasf5nvcj" path="res://enemies/goblin/animations/Idle.fbx" id="2"]
+[ext_resource type="PackedScene" uid="uid://bwlnrtnbq5wdg" path="res://enemies/goblin/animations/Walking.fbx" id="3"]
+[ext_resource type="PackedScene" uid="uid://dfgkt4d1xls3j" path="res://enemies/goblin/animations/Swiping.fbx" id="4"]
+
+[sub_resource type="CapsuleShape3D" id="5"]
+radius = 0.4
+height = 1.8
+
+[node name="Enemy" type="CharacterBody3D"]
+script = ExtResource("1")
+
+[node name="Idle" parent="." instance=ExtResource("2")]
+
+[node name="Walking" parent="." instance=ExtResource("3")]
+visible = false
+
+[node name="Swiping" parent="." instance=ExtResource("4")]
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("5")

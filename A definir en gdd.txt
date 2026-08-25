@@ -1,0 +1,7 @@
+  Lo mínimo que necesita definir el GDD para este juego:
+  1. La fantasía del jugador — ¿qué emoción perseguís? ¿sentirse imparable rodeado de cientos de enemigos? ¿tensión de
+  sobrevivir al borde de la muerte? Eso define todo el diseño de balance.
+  2. Manual vs auto-attack — definilo en el GDD antes de arrancar, porque cambia el core loop entero.
+  3. Cuántas habilidades/upgrades mínimos para que una run se sienta variada (spoiler: necesitás al menos 10-12
+  distintas para que no se repita dentro de la misma run).
+  4. La curva de una run — dibujala literalmente: minuto 0 a 30, cómo escala la dificultad, cuándo aparece el boss.

@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://duk4ik86i0nmm"]
+
+[ext_resource type="Script" uid="uid://b2pdl707qgew1" path="res://characters/longsword/longsword.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://p24ro4mr5iii" path="res://assets/characters/PlayerCharacterLongsword/Idle.fbx" id="2_g2els"]
+[ext_resource type="PackedScene" uid="uid://bwev7qtf2h4u1" path="res://assets/characters/PlayerCharacterLongsword/Walking.fbx" id="3_walk"]
+[ext_resource type="PackedScene" uid="uid://diqypks4vvayr" path="res://assets/characters/PlayerCharacterLongsword/Great Sword Slash.fbx" id="4_slash"]
+[ext_resource type="PackedScene" uid="uid://b0yc1x0lkinsl" path="res://assets/characters/PlayerCharacterLongsword/Running.fbx" id="5_run"]
+[ext_resource type="PackedScene" uid="uid://crxyvjrk05qw2" path="res://assets/characters/PlayerCharacterLongsword/Great Sword Jump Attack.fbx" id="6_jump"]
+
+[sub_resource type="CapsuleShape3D" id="3"]
+radius = 0.4
+height = 1.8
+
+[node name="Player" type="CharacterBody3D" unique_id=944703477]
+script = ExtResource("1")
+
+[node name="Idle" parent="." unique_id=1733896551 instance=ExtResource("2_g2els")]
+
+[node name="Walking" parent="." unique_id=688026356 instance=ExtResource("3_walk")]
+visible = false
+
+[node name="Running" parent="." unique_id=962309118 instance=ExtResource("5_run")]
+visible = false
+
+[node name="Slash" parent="." unique_id=1865291366 instance=ExtResource("4_slash")]
+visible = false
+
+[node name="JumpAttack" parent="." unique_id=2045812301 instance=ExtResource("6_jump")]
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=320352150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("3")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1045774505]
