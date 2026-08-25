@@ -16,6 +16,17 @@ const GRAVITY = -20.0
 @export var attack_cooldown: float = 1.5
 @export var xp_reward:     int   = 10
 
+## Multiplicador del feedback de impacto (números, flash, estallido, hitstop).
+## Los bosses lo suben para que pegarles se sienta distinto a pegarle a un trash mob.
+@export var feedback_scale: float = 1.0
+## Color del número de daño flotante.
+@export var damage_number_color: Color = Color(1.0, 0.95, 0.6)
+## Color del estallido al morir.
+@export var death_burst_color: Color = Color(0.8, 0.15, 0.12)
+## 0 = el knockback lo mueve entero, 1 = inamovible. Los bosses van alto:
+## un jefe que sale volando de un espadazo deja de dar miedo.
+@export_range(0.0, 1.0) var knockback_resistance: float = 0.0
+
 var current_hp: float
 var player: Node3D = null
 var attack_timer: float = 0.0
@@ -33,6 +44,9 @@ var _terrain: Node = null
 # HP bar (creada por código; cada enemigo puede personalizar la altura)
 var hp_fill: MeshInstance3D = null
 @export var hp_bar_height: float = 2.4
+## Escala de la barra de HP en unidades de mundo (la barra es top_level, así que
+## NO hereda el `scale` del enemigo: un boss grande necesita subirla a mano).
+@export var hp_bar_scale: float = 1.0
 
 enum State { IDLE, PATROL, CHASE, APPROACH }
 var state = State.IDLE
@@ -288,22 +302,44 @@ func _do_attack():
 	player.take_damage(attack_damage)
 
 func take_damage(amount: float):
+	# El feedback va ANTES del redirect a red: quien pega tiene que ver el golpe
+	# en su propia pantalla sin esperar el round-trip al host.
+	_play_hit_feedback(amount)
 	# En multijugador: clientes redirigen el daño al host
 	if NetworkManager.multiplayer_mode and not is_multiplayer_authority():
 		_take_damage_rpc.rpc_id(1, amount)
 		return
 	last_attacker_id = multiplayer.get_unique_id() if NetworkManager.multiplayer_mode else 1
-	current_hp = clamp(current_hp - amount, 0, max_hp)
-	if current_hp <= 0:
-		_die()
+	_apply_damage(amount)
 
 @rpc("any_peer", "reliable")
 func _take_damage_rpc(amount: float):
 	# No llamar take_damage() para no pisar last_attacker_id
 	last_attacker_id = multiplayer.get_remote_sender_id()
+	_play_hit_feedback(amount)
+	_apply_damage(amount)
+
+## Punto único donde el HP baja. Todo lo que quita vida pasa por acá.
+func _apply_damage(amount: float) -> void:
 	current_hp = clamp(current_hp - amount, 0, max_hp)
+	_on_damaged(amount)
 	if current_hp <= 0:
 		_die()
+
+## Hook para subclases: fases de boss, enrage, gritos al ser golpeado.
+func _on_damaged(_amount: float) -> void:
+	pass
+
+func _play_hit_feedback(amount: float) -> void:
+	var top := global_position + Vector3(0.0, hp_bar_height * 0.85, 0.0)
+	CombatFeedback.flash(self)
+	CombatFeedback.damage_number(top, amount, damage_number_color, feedback_scale)
+	CombatFeedback.hitstop(feedback_scale)
+
+func _play_death_feedback() -> void:
+	var center := global_position + Vector3(0.0, hp_bar_height * 0.5, 0.0)
+	CombatFeedback.death_burst(center, feedback_scale, death_burst_color)
+	CombatFeedback.hitstop(feedback_scale * 1.8)
 
 func configure(hp_mult: float, speed_mult: float) -> void:
 	max_hp     = max_hp * hp_mult
@@ -311,6 +347,7 @@ func configure(hp_mult: float, speed_mult: float) -> void:
 	current_hp = max_hp
 
 func _die():
+	_play_death_feedback()
 	var killer_id = last_attacker_id
 	emit_signal("died", killer_id)
 	for wm in get_tree().get_nodes_in_group("wave_manager"):
@@ -325,6 +362,7 @@ func _die():
 
 @rpc("authority", "reliable")
 func _rpc_die(killer_id: int):
+	_play_death_feedback()
 	# Solo dar XP si este peer fue el asesino
 	if killer_id == multiplayer.get_unique_id():
 		if player and player.has_method("add_experience"):
@@ -336,11 +374,11 @@ func apply_knockback(impulse: Vector3):
 	if NetworkManager.multiplayer_mode and not is_multiplayer_authority():
 		_apply_knockback_rpc.rpc_id(1, impulse)
 		return
-	knockback_velocity = impulse
+	knockback_velocity = impulse * (1.0 - knockback_resistance)
 
 @rpc("any_peer", "reliable")
 func _apply_knockback_rpc(impulse: Vector3):
-	knockback_velocity = impulse
+	knockback_velocity = impulse * (1.0 - knockback_resistance)
 
 # --- HP Bar 3D ---
 
@@ -348,6 +386,7 @@ func _create_hp_bar():
 	var bar_root = Node3D.new()
 	bar_root.name = "HPBar"
 	bar_root.top_level = true
+	bar_root.scale = Vector3(hp_bar_scale, hp_bar_scale, hp_bar_scale)
 	add_child(bar_root)
 
 	var bg = MeshInstance3D.new()

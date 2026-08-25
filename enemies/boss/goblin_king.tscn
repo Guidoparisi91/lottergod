@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/boss/goblin_king.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://cbbymasf5nvcj" path="res://enemies/goblin/animations/Idle.fbx" id="2"]
+[ext_resource type="PackedScene" uid="uid://bwlnrtnbq5wdg" path="res://enemies/goblin/animations/Walking.fbx" id="3"]
+[ext_resource type="PackedScene" uid="uid://dfgkt4d1xls3j" path="res://enemies/goblin/animations/Swiping.fbx" id="4"]
+
+[sub_resource type="CapsuleShape3D" id="5"]
+radius = 0.4
+height = 1.8
+
+[node name="GoblinKing" type="CharacterBody3D"]
+script = ExtResource("1")
+max_hp = 320.0
+speed = 2.8
+detection_range = 24.0
+attack_range = 4.2
+attack_damage = 22.0
+attack_cooldown = 2.4
+xp_reward = 3000
+feedback_scale = 2.2
+damage_number_color = Color(1, 0.85, 0.3, 1)
+death_burst_color = Color(0.9, 0.2, 0.1, 1)
+knockback_resistance = 0.88
+hp_bar_height = 8.5
+hp_bar_scale = 3.2
+approach_distance = 30.0
+patrol_size = Vector2(36, 36)
+body_scale = 3.6
+attack_anim_speed = 0.8
+hit_percent = 0.45
+body_tint = Color(0.35, 0.02, 0.05, 0.3)
+
+[node name="Idle" parent="." instance=ExtResource("2")]
+
+[node name="Walking" parent="." instance=ExtResource("3")]
+visible = false
+
+[node name="Swiping" parent="." instance=ExtResource("4")]
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("5")

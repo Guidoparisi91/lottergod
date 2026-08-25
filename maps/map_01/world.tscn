@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bgwbu85r1hhjs" path="res://maps/map_01/world.gd" id="1"]
 [ext_resource type="Script" uid="uid://ccn3xsbfgnpc8" path="res://shared/iso_camera.gd" id="2"]
 [ext_resource type="PackedScene" uid="uid://duk4ik86i0nmm" path="res://characters/longsword/longsword.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://enemies/boss/goblin_king.tscn" id="boss_scene"]
 [ext_resource type="PackedScene" path="res://enemies/goblin/enemy.tscn" id="goblin_scene"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="hud"]
 [ext_resource type="Script" uid="uid://cky58xytaysfe" path="res://enemies/enemy_pit.gd" id="pit_script"]
@@ -114,6 +115,15 @@ metadata/_edit_lock_ = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8303871, 5.4166183, -28.463175)
 script = ExtResource("pit_script")
 enemy_scene = ExtResource("goblin_scene")
-max_enemies = 100
+max_enemies = 12
 patrol_size = Vector2(300, 300)
-spawn_interval = 2.0
+spawn_interval = 4.0
+
+[node name="GoblinKing" parent="." unique_id=1593793357 instance=ExtResource("boss_scene")]
+transform = Transform3D(0.99431694, -0.036709014, -0.099931605, 0.026117045, 0.9940965, -0.10530902, 0.10320745, 0.10210062, 0.98940575, 28.526749, 6, -86.54434)
+
+[node name="GoblinKing3" parent="." unique_id=545051992 instance=ExtResource("boss_scene")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.1915, 0, 0)
+
+[node name="GoblinKing2" parent="." unique_id=652241041 instance=ExtResource("boss_scene")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 62.913834)
