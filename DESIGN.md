@@ -541,3 +541,67 @@ y más grande disponible), colisión en las casas, y conectar `wave_manager` al 
 **Sigue intacto: USD 0 gastados.** Todo lo usado hoy es CC0 o gratis — Quaternius,
 Sonniss GDC, Kenney, ambientCG. La regla de §10 (no boostear en frío) sigue en pie y
 ahora tiene respaldo: el *Basic Launch* de CrazyGames da la señal de retención gratis.
+
+---
+
+## 15. El concepto, tomando forma (2026-08-26)
+
+Propuesta de Guido al cierre del segundo día, después de jugar el prototipo:
+
+> *"limpiar enemigos pequeños, limpiar boss, y entre medio pelear contra otro
+> jugador o contra un Jugador IA"*
+
+**[TENDENCIA] Arena por rondas con tres tipos de encuentro.**
+
+| Encuentro | Qué se siente | Qué pone a prueba | Estado hoy |
+|---|---|---|---|
+| Oleada de chicos | Multitud, presión constante | Posicionamiento, área | **Funciona** (wave_manager) |
+| Boss gigante | Duelo pesado y legible | Lectura de patrones | **Funciona** (GoblinKing) |
+| Duelo vs jugador/IA | Alguien que juega como vos | Skill puro | **No existe** |
+
+**Por qué funciona:** los tres se sienten distintos. Los survivors se vuelven
+monótonos porque todo es la misma multitud; acá el ritmo tiene picos y valles y
+cada ronda cambia qué tenés que hacer bien. Y respeta los cuatro principios
+[DECIDIDO] de §4 sin excepciones.
+
+### 15.1 El "Jugador IA" es el fantasma de §9
+
+Guido llegó a la misma pieza por otro camino, sin acordarse del diseño anterior.
+Eso es buena señal: la idea aparece sola cuando se piensa el problema.
+
+**Se construye en dos etapas, y la primera es barata:**
+
+1. **Bot con input falso.** Se le enchufa a `longsword.gd` una fuente de input
+   sintética. Pelea como un humano porque *es* el personaje del jugador con las
+   manos atadas: mismas skills, cooldowns, dash y cadencia. **Sin backend.**
+2. **Fantasma completo.** Ese mismo bot se alimenta de builds de jugadores reales,
+   y ahí aparece el gancho asincrónico de §9. Es una actualización, no un rediseño.
+
+### 15.2 El contenido dejó de ser el problema
+
+Verificado el 26/08: Quaternius —mismo autor que el Medieval Village— publica en
+CC0 packs de monstruos (Ultimate Monsters, Easy Enemy, Animated Monster, Zombie,
+Dinosaur), de personajes jugables (Universal Base Characters, RPG Character Pack,
+Animated Knight, Modular Outfits) y la **Universal Animation Library** con 120+
+animaciones **compatibles con rigs Mixamo**, que es el del personaje actual.
+
+Con la jerarquía `BaseEnemy → AnimatedEnemy → MeleeEnemy` ya hecha, cada enemigo
+nuevo es configuración, no código. **"Más enemigos" y "más personajes" dejaron de
+ser la parte cara.**
+
+### 15.3 Dónde está el riesgo, entonces
+
+En el **tercer encuentro**. Oleadas y bosses ya funcionan; el duelo es lo único que
+no existe, y es exactamente lo que separaría a este juego de otros cien survivors.
+
+**[PROPUESTO] Prototipar el duelo antes que el contenido.** Un bot que pelee de
+igual a igual en un ring, aunque sea feo. Si se siente bien, hay un juego con
+identidad. Si no, mejor saberlo antes de importar veinte monstruos.
+
+### 15.4 Lo que sigue sin cerrar
+
+- **¿Cuál es el GIF de tres segundos?** (§14) El boss gigante es visualmente muy
+  fuerte y el duelo también, pero todavía no hay una frase que lo explique solo.
+- ¿Qué pasa entre rondas? El draft de §8.3 o el robo de habilidades de §14.1
+  encajan acá, pero no están decididos.
+- ¿La corrida tiene final, o se juega hasta morir?
