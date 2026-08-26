@@ -28,6 +28,10 @@ const VOID_Y  = -30.0
 ## 0 = el knockback lo mueve entero, 1 = inamovible. Los bosses van alto:
 ## un jefe que sale volando de un espadazo deja de dar miedo.
 @export_range(0.0, 1.0) var knockback_resistance: float = 0.0
+## Resistencia a que lo corran de lugar caminándole encima. 0 = se empuja como
+## una caja, 1 = plantado. Es distinto de `knockback_resistance`: eso frena el
+## impulso de un golpe, esto frena el empujón físico de un cuerpo contra otro.
+@export_range(0.0, 1.0) var push_resistance: float = 0.0
 
 var current_hp: float
 var player: Node3D = null
@@ -45,7 +49,11 @@ var _terrain: Node = null
 
 # HP bar (creada por código; cada enemigo puede personalizar la altura)
 var hp_fill: MeshInstance3D = null
-@export var hp_bar_height: float = 2.4
+## Separación entre la cabeza del modelo y la barra, en metros. La altura de la
+## cabeza se mide sola del AABB, así que este número NO hay que retocarlo al
+## cambiar `body_scale`: un valor chico sirve para un goblin y para un boss.
+@export var hp_bar_height: float = 0.5
+var _alto_cabeza_cache: float = 0.0
 ## Escala de la barra de HP en unidades de mundo (la barra es top_level, así que
 ## NO hereda el `scale` del enemigo: un boss grande necesita subirla a mano).
 @export var hp_bar_scale: float = 1.0
@@ -55,6 +63,13 @@ var state = State.IDLE
 
 @export var approach_speed_mult: float = 2.5
 @export var approach_distance:   float = 30.0
+
+## Velocidad de giro, en radianes por segundo aproximados. Los bosses grandes van
+## bajo (4–6): un jefe pesado que gira como un trompo no se lee como pesado, y
+## además vuelve inútil rodearlo.
+@export var turn_speed: float = 10.0
+## Segundos que lleva con el ataque listo sin poder encarar. Acelera el giro.
+var _espera_de_giro: float = 0.0
 
 @export var patrol_size: Vector2 = Vector2(6.0, 6.0)
 var spawn_position: Vector3 = Vector3.ZERO
@@ -71,7 +86,11 @@ func _ready():
 	spawn_position = global_position
 	patrol_target  = _pick_patrol_target()
 	state          = State.PATROL
-	for m in find_children("*", "MeshInstance3D", true, false):
+	for nodo in find_children("*", "MeshInstance3D", true, false):
+		var m := nodo as MeshInstance3D
+		# La barra de HP es UI flotante: nada de sombras ni de iluminación global.
+		if m == null or m.is_in_group("hp_bar_part"):
+			continue
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		m.gi_mode     = GeometryInstance3D.GI_MODE_DYNAMIC
 	_terrain = _find_terrain3d()
@@ -91,12 +110,35 @@ func _search_terrain(node: Node) -> Node:
 func setup(p: Node3D):
 	player = p
 
+
+## Las subclases con animaciones lo sobreescriben. Mientras es true, el enemigo
+## está comprometido con su animación de ataque y NO puede reorientarse.
+func esta_atacando() -> bool:
+	return false
+
+
+## ¿Tiene el objetivo lo bastante al frente como para arrancar un ataque? Las
+## subclases cuerpo a cuerpo lo atan a su cono de golpe, para no lanzar golpes
+## que ya se sabe que van a fallar. Por defecto, cualquier dirección sirve.
+func _tiene_de_frente(_dir: Vector3) -> bool:
+	return true
+
+
+## Gira hacia una dirección de forma gradual. Reemplaza al `rotation.y = atan2()`
+## directo, que producía giros instantáneos de 180 grados — y peor, permitía que
+## el enemigo se diera vuelta en pleno wind-up, anulando la ventana de esquive.
+func _girar_hacia(dir: Vector3, delta: float, urgencia: float = 1.0) -> void:
+	if esta_atacando() or dir.length() < 0.01:
+		return
+	var objetivo := atan2(dir.x, dir.z)
+	rotation.y = lerp_angle(rotation.y, objetivo, minf(1.0, delta * turn_speed * urgencia))
+
 func set_patrol_area(center: Vector3, size: Vector2):
 	spawn_position = center
 	patrol_size    = size
 	patrol_target  = _pick_patrol_target()
 
-func _physics_process(delta):
+func _physics_process(delta: float):
 	# Clientes: solo interpolar posición recibida del host
 	if NetworkManager.multiplayer_mode and not is_multiplayer_authority():
 		global_position = global_position.lerp(_remote_pos, delta * 15.0)
@@ -134,11 +176,11 @@ func _physics_process(delta):
 				state = State.PATROL
 		State.PATROL:
 			_check_vision()
-			_move_to_patrol_target()
+			_move_to_patrol_target(delta)
 		State.CHASE:
-			_chase_and_attack()
+			_chase_and_attack(delta)
 		State.APPROACH:
-			_approach_to_player()
+			_approach_to_player(delta)
 
 	if knockback_velocity.length() > 0.1:
 		velocity.x = knockback_velocity.x
@@ -147,8 +189,20 @@ func _physics_process(delta):
 	else:
 		knockback_velocity = Vector3.ZERO
 
+	var _pos_previa := global_position
 	if state != State.IDLE or not is_on_floor() or knockback_velocity.length() > 0.1:
 		move_and_slide()
+
+	# Anti-empujón: descuenta el desplazamiento que NO vino de su propia velocidad.
+	# `move_and_slide()` resuelve la penetración con el jugador corriéndolo de
+	# lugar, así que sin esto a un boss lo movés de a metros caminándole encima.
+	if push_resistance > 0.0:
+		var esperado: Vector3 = Vector3(velocity.x, 0.0, velocity.z) * delta
+		var real:     Vector3 = global_position - _pos_previa
+		real.y = 0.0
+		var exceso: Vector3 = real - esperado
+		if exceso.length() > 0.0005:
+			global_position -= exceso * push_resistance
 
 	# Snap Y al terreno después de move_and_slide() — sin depender de chunks de física.
 	# Offset 0: el fondo de la cápsula está en Y=0 del root (center=0.9, height=1.8 → bottom=0).
@@ -185,7 +239,7 @@ func _pick_patrol_target() -> Vector3:
 	var z = randf_range(-patrol_size.y * 0.5, patrol_size.y * 0.5)
 	return spawn_position + Vector3(x, 0.0, z)
 
-func _move_to_patrol_target():
+func _move_to_patrol_target(delta: float):
 	var diff = patrol_target - global_position
 	# Solo XZ: el Y del enemy siempre difiere del patrol_target.y por el terrain snap.
 	var dist = Vector2(diff.x, diff.z).length()
@@ -200,9 +254,9 @@ func _move_to_patrol_target():
 	dir = dir.normalized()
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
-	rotation.y = atan2(dir.x, dir.z)
+	_girar_hacia(dir, delta)
 
-func _approach_to_player():
+func _approach_to_player(delta: float):
 	var nearest = _get_nearest_player()
 	if nearest == null:
 		state = State.IDLE
@@ -220,7 +274,7 @@ func _approach_to_player():
 		dir = (dir + sep * 0.6).normalized()
 	velocity.x = dir.x * speed * approach_speed_mult
 	velocity.z = dir.z * speed * approach_speed_mult
-	rotation.y = atan2(dir.x, dir.z)
+	_girar_hacia(dir, delta)
 
 func _check_vision():
 	var nearest = _get_nearest_player()
@@ -243,16 +297,46 @@ func _get_nearest_player() -> Node3D:
 			best = p
 	return best
 
-func _chase_and_attack():
+func _chase_and_attack(delta: float):
 	if player == null:
 		return
+
+	# Comprometido con la animación: no persigue ni se reorienta. Sin esto, si te
+	# alejás durante el wind-up el enemigo sale a perseguirte con la animación
+	# corriendo y se ve como si patinara.
+	if esta_atacando():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
+
 	var dist = global_position.distance_to(player.global_position)
 
 	if dist < attack_range:
 		velocity.x = 0
 		velocity.z = 0
-		if attack_timer <= 0.0:
-			attack_timer = attack_cooldown
+
+		# Reorientarse ENTRE golpes. `_girar_hacia` no hace nada mientras dura la
+		# animación, así que el enemigo se compromete a cada ataque pero después
+		# vuelve a buscarte. Sin esto se queda pegándole al aire para siempre.
+		var hacia := player.global_position - global_position
+		hacia.y = 0.0
+
+		# Con el ataque listo pero sin poder encarar, va girando cada vez más
+		# decidido. Sin esta válvula, un jugador orbitando lo deja dando vueltas
+		# para siempre sin lanzar un solo golpe.
+		var urgencia := 1.0
+		if attack_timer <= 0.0 and not esta_atacando():
+			_espera_de_giro += delta
+			urgencia = 1.0 + minf(_espera_de_giro * 1.5, 2.5)
+		else:
+			_espera_de_giro = 0.0
+
+		_girar_hacia(hacia, delta, urgencia)
+
+		# Y no arranca un golpe si todavía no te encaró: primero gira, después pega.
+		if attack_timer <= 0.0 and not esta_atacando() and _tiene_de_frente(hacia):
+			attack_timer    = attack_cooldown
+			_espera_de_giro = 0.0
 			_do_attack()
 		return
 
@@ -270,7 +354,7 @@ func _chase_and_attack():
 
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
-	rotation.y = atan2(dir.x, dir.z)
+	_girar_hacia(dir, delta)
 
 func _get_surround_target() -> Vector3:
 	var chasers: Array = []
@@ -350,6 +434,25 @@ func _play_death_feedback() -> void:
 	CombatFeedback.death_burst(center, feedback_scale, death_burst_color)
 	CombatFeedback.hitstop(feedback_scale * 1.8)
 
+## Radio horizontal del cuerpo, ya escalado por `body_scale`. Quien ataca lo suma
+## a su propio alcance: sin esto, un enemigo grande es imposible de golpear porque
+## la distancia se mide contra su CENTRO y el cuerpo ocupa casi todo el rango.
+func radio_cuerpo() -> float:
+	for hijo in get_children():
+		var c := hijo as CollisionShape3D
+		if c == null or c.shape == null:
+			continue
+		var forma: Shape3D = c.shape
+		if forma is CapsuleShape3D:
+			return (forma as CapsuleShape3D).radius * scale.x
+		if forma is SphereShape3D:
+			return (forma as SphereShape3D).radius * scale.x
+		if forma is BoxShape3D:
+			var medidas: Vector3 = (forma as BoxShape3D).size
+			return maxf(medidas.x, medidas.z) * 0.5 * scale.x
+	return 0.4 * scale.x
+
+
 func configure(hp_mult: float, speed_mult: float) -> void:
 	max_hp     = max_hp * hp_mult
 	speed      = speed  * speed_mult
@@ -415,6 +518,9 @@ func _create_hp_bar():
 	bg_mat.albedo_color = Color(0.15, 0.15, 0.15)
 	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	bg.material_override = bg_mat
+	# La barra es UI flotante: no debe proyectar sombra ni recibirla.
+	bg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	bg.add_to_group("hp_bar_part")
 	bar_root.add_child(bg)
 
 	hp_fill = MeshInstance3D.new()
@@ -426,6 +532,8 @@ func _create_hp_bar():
 	fill_mat.albedo_color = Color(0.2, 0.9, 0.2)
 	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	hp_fill.material_override = fill_mat
+	hp_fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hp_fill.add_to_group("hp_bar_part")
 	bar_root.add_child(hp_fill)
 
 func _update_hp_bar():
@@ -434,10 +542,36 @@ func _update_hp_bar():
 	var pct = current_hp / max_hp
 	hp_fill.scale.x = pct
 	hp_fill.position.x = (pct - 1.0) * 0.5
-	$HPBar.global_position = global_position + Vector3(0, hp_bar_height, 0)
+
+	var barra: Node3D = $HPBar
+	barra.global_position = global_position + Vector3(0, _alto_cabeza() + hp_bar_height, 0)
+
 	var cam = get_viewport().get_camera_3d()
 	if cam:
-		var cam_flat = Vector3(cam.global_position.x, $HPBar.global_position.y, cam.global_position.z)
-		var to_cam = cam_flat - $HPBar.global_position
-		if to_cam.length() > 0.01:
-			$HPBar.look_at(cam_flat, Vector3.UP)
+		var cam_flat = Vector3(cam.global_position.x, barra.global_position.y, cam.global_position.z)
+		if (cam_flat - barra.global_position).length() > 0.01:
+			barra.look_at(cam_flat, Vector3.UP)
+			# look_at() reconstruye la basis normalizada y se come la escala.
+			# Hay que reponerla o la barra vuelve a tamaño 1 en el primer frame.
+			barra.scale = Vector3(hp_bar_scale, hp_bar_scale, hp_bar_scale)
+
+
+## Altura de la cabeza en metros, medida del modelo real y ya escalada. Se calcula
+## una sola vez: así la barra queda bien puesta con cualquier `body_scale` sin
+## tener que retocar números a mano cada vez que se agranda un enemigo.
+func _alto_cabeza() -> float:
+	if _alto_cabeza_cache > 0.0:
+		return _alto_cabeza_cache
+
+	var tope := 0.0
+	for nodo in find_children("*", "MeshInstance3D", true, false):
+		var m := nodo as MeshInstance3D
+		if m == null or not m.visible or m.is_in_group("hp_bar_part"):
+			continue
+		var caja: AABB = m.get_aabb()
+		var punta: Vector3 = m.global_transform * (caja.position + Vector3(0.0, caja.size.y, 0.0))
+		tope = maxf(tope, punta.y - global_position.y)
+
+	# Sin mallas visibles todavía: fallback a la cápsula de colisión.
+	_alto_cabeza_cache = tope if tope > 0.1 else 1.8 * scale.y
+	return _alto_cabeza_cache

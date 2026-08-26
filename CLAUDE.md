@@ -186,6 +186,60 @@ Para agregar enemigo nuevo: crear carpeta en `enemies/`, extender `BaseEnemy`, s
 
 ---
 
+## Combate cuerpo a cuerpo — las reglas
+
+El enemigo **se compromete a cada golpe**: durante la animación no gira ni persigue.
+Esa es la ventana de esquive, y es lo que hace legible la pelea.
+
+| Perilla | Dónde | Qué hace |
+|---|---|---|
+| `turn_speed` | BaseEnemy | Giro gradual (`lerp_angle`). Bajo = pesado y fácil de rodear |
+| `push_resistance` | BaseEnemy | 0 = se empuja como una caja · 1 = plantado |
+| `aim_tolerance_degrees` | MeleeEnemy | Cuán encarado tiene que estar para **lanzar** |
+| `hit_arc_degrees` | MeleeEnemy | Cuán ancho es el cono al **conectar** |
+| `attack_anim_speed` | AnimatedEnemy | Bajo = wind-up largo y legible |
+
+**La regla que importa: apuntar estricto, conectar permisivo.** `aim_tolerance` va
+bastante más ajustado que `hit_arc`. Al revés, el enemigo lanza golpes de costado
+que después fallan y se lee como que no entiende dónde estás. (Se probó al revés
+y era exactamente eso.)
+
+**Hooks de BaseEnemy** que las subclases sobreescriben:
+- `esta_atacando()` — AnimatedEnemy lo ata a su animación. Bloquea giro y persecución
+- `_tiene_de_frente(dir)` — MeleeEnemy lo ata a `aim_tolerance_degrees`
+- `_girar_hacia(dir, delta, urgencia)` — giro gradual, **no hace nada si está atacando**
+
+**Válvula anti-orbitado:** con el ataque listo pero sin poder encarar, `_espera_de_giro`
+acumula y la urgencia sube hasta 3.5×. Sin eso, un jugador girando alrededor lo deja
+dando vueltas para siempre sin lanzar un solo golpe.
+
+**Anti-empujón:** `move_and_slide()` resuelve la penetración con el jugador corriendo
+al enemigo de lugar — a un boss lo movés de a metros caminándole encima. Se descuenta
+el desplazamiento que no vino de su propia velocidad:
+`exceso = (pos_real - pos_previa) - velocity * delta`.
+
+**Alcance del jugador:** `world.gd → _alcance_contra()` suma `BaseEnemy.radio_cuerpo()`
+al `ATTACK_RANGE`. La distancia se mide contra el **centro**, así que sin esto un
+enemigo escalado es imposible de golpear: su propio cuerpo ocupa todo el rango.
+
+## Barra de HP — tres cosas que no son obvias
+
+1. **`look_at()` destruye la escala.** Reconstruye la basis normalizada, así que hay
+   que reponer `hp_bar_scale` justo después o la barra vuelve a tamaño 1 en el primer
+   frame. Era el motivo de que la barra del boss se viera chica pasara lo que pasara.
+2. **La altura se mide sola** del AABB del modelo (`_alto_cabeza()`, cacheada).
+   `hp_bar_height` es solo el **margen sobre la cabeza** — no hay que retocarlo al
+   cambiar `body_scale`.
+3. **Las piezas van en el grupo `hp_bar_part`** para quedar fuera del loop de `_ready`
+   que activa sombras en todos los meshes, y fuera del cálculo de altura.
+
+## Tinte de cuerpo (`CombatFeedback.apply_tint`)
+
+**No usar `material_overlay` con `SHADING_MODE_UNSHADED`**: una capa de color plano
+encima aplana el modelo, le come el sombreado y se ve como una calcomanía. Lo correcto
+es duplicar el material real y mover su `albedo_color` hacia el tinte — conserva
+textura, volumen e iluminación, solo cambia de color.
+
 ## Spawners — dos sistemas distintos
 
 | | `EnemyPit` | `WaveManager` |
@@ -265,6 +319,19 @@ esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
   visualmente, no por código.
 - **`addons/3DGallery` está parcheado**: el original crasheaba en `GalleryManager.gd:30`
   al mover el mouse sin modelo cargado. Si se reinstala, el parche se pierde.
+- **Para validar que los scripts compilan**, el comando es:
+  ```
+  Godot_v4.7.2-stable_win64_console.exe --headless --editor --quit --path .
+  ```
+  `--headless --quit` a secas **NO compila los scripts** y da falso "todo bien".
+  Solo `--editor` fuerza el escaneo y regenera `global_script_class_cache.cfg`.
+  Un `Could not resolve class "X"` casi siempre es en cascada: el error real está
+  en el script que define esa clase, no donde aparece el mensaje.
+- **GDScript no reduce el tipo dentro de un `and`.** `if n is Foo and n.prop` falla
+  en parseo porque `n.prop` se evalúa contra el tipo declarado. Castear antes:
+  `var f := n as Foo` y después chequear `f == null`.
+- **`func _physics_process(delta)` sin tipo hace que `delta` sea Variant**, y ahí
+  `var x := algo * delta` no puede inferir el tipo. Tipar el parámetro o la variable.
 
 ## Cámara (`shared/iso_camera.gd`)
 Isométrica. Pitch −30° a −80° (default −60°), yaw libre con click medio. Zoom ARM 5–20 (arranca en 20).

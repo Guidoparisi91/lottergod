@@ -47,6 +47,15 @@ func _spawn_origin() -> Vector3:
 	return SPAWN_ORIGIN
 
 
+## Alcance real contra un objetivo. Se le suma el radio de su cuerpo, porque la
+## distancia se mide contra el centro: sin esto un enemigo escalado (un boss) es
+## imposible de golpear, ya que su propio cuerpo ocupa casi todo el rango.
+func _alcance_contra(objetivo: Node3D) -> float:
+	if objetivo and objetivo.has_method("radio_cuerpo"):
+		return ATTACK_RANGE + objetivo.radio_cuerpo()
+	return ATTACK_RANGE
+
+
 func _spawn_player(peer_id: int):
 	var p = player_scene.instantiate()
 	p.name = "Player_%d" % peer_id
@@ -142,7 +151,7 @@ func _process(delta):
 		var result = _raycast(get_viewport().get_mouse_position())
 		if result and (result.collider.is_in_group("enemy") or result.collider.is_in_group("player_remote")):
 			var d = local_player.global_position.distance_to(result.collider.global_position)
-			if d <= ATTACK_RANGE:
+			if d <= _alcance_contra(result.collider):
 				pending_attack_target = null
 				local_player.attack_target(result.collider)
 				return
@@ -157,7 +166,7 @@ func _process(delta):
 		pending_attack_target = null
 		return
 	var dist = local_player.global_position.distance_to(pending_attack_target.global_position)
-	if dist <= ATTACK_RANGE:
+	if dist <= _alcance_contra(pending_attack_target):
 		local_player.attack_target(pending_attack_target)
 		pending_attack_target = null
 
@@ -175,7 +184,7 @@ func _try_attack_or_move(mouse_pos: Vector2, right_click: bool):
 	var collider = result.collider
 	if collider.is_in_group("enemy") or collider.is_in_group("player_remote"):
 		var dist = local_player.global_position.distance_to(collider.global_position)
-		if dist <= ATTACK_RANGE:
+		if dist <= _alcance_contra(collider):
 			pending_attack_target = null
 			local_player.attack_target(collider)
 		elif not right_click:
@@ -196,7 +205,7 @@ func _on_attack_finished():
 	var result = _raycast(held_mouse_pos)
 	if result and (result.collider.is_in_group("enemy") or result.collider.is_in_group("player_remote")):
 		var dist = local_player.global_position.distance_to(result.collider.global_position)
-		if dist <= ATTACK_RANGE:
+		if dist <= _alcance_contra(result.collider):
 			local_player.attack_target(result.collider)
 
 

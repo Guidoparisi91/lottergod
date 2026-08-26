@@ -14,9 +14,15 @@ const FLASH_COLOR := Color(1.0, 1.0, 1.0, 0.65)
 
 # --- Hitstop ---
 ## Cuánto dura el micro-freeze, en segundos REALES (no afectados por time_scale).
-const HITSTOP_TIME  := 0.045
-## A qué velocidad corre el juego durante el hitstop (0.05 = 5%).
-const HITSTOP_SCALE := 0.05
+## Muy corto a propósito: el hitstop tiene que sentirse sin verse. Si lo notás
+## como un tirón, está mal puesto.
+const HITSTOP_TIME  := 0.018
+## A qué velocidad corre el juego durante el hitstop. NO es un freeze: 0.4 es una
+## ralentización breve. Valores por debajo de ~0.2 se leen como un cuelgue.
+const HITSTOP_SCALE := 0.40
+## Tope del multiplicador de `feedback_scale`. Sin esto, un boss con escala 2.2
+## estira el hitstop a más del doble y ahí sí se vuelve molesto.
+const HITSTOP_MAX_MULT := 1.5
 
 # --- Números de daño ---
 const DMG_RISE_TIME := 0.85
@@ -62,15 +68,33 @@ func flash(body: Node3D, color: Color = FLASH_COLOR) -> void:
 
 
 ## Tinte permanente (lo usan los enemigos para diferenciarse sin arte nuevo).
+## Tiñe el cuerpo desplazando el albedo de sus materiales hacia `color`, con el
+## alpha como fuerza de la mezcla.
+##
+## NO usa `material_overlay`: una capa unshaded encima aplana el modelo y le come
+## el sombreado, y el resultado se ve como una calcomanía. Duplicando el material
+## y moviendo el albedo, el bicho conserva su textura, su volumen y cómo le pega
+## la luz — solo cambia de color.
 func apply_tint(body: Node3D, color: Color) -> void:
 	if body == null or color.a <= 0.0:
 		return
-	var mat = StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = color
-	for m in body.find_children("*", "MeshInstance3D", true, false):
-		m.material_overlay = mat
+
+	var fuerza  := clampf(color.a, 0.0, 1.0)
+	var destino := Color(color.r, color.g, color.b, 1.0)
+
+	for nodo in body.find_children("*", "MeshInstance3D", true, false):
+		var m := nodo as MeshInstance3D
+		if m == null or m.mesh == null:
+			continue
+		for i in m.mesh.get_surface_count():
+			var base: Material = m.get_active_material(i)
+			var mat: StandardMaterial3D
+			if base is StandardMaterial3D:
+				mat = (base as StandardMaterial3D).duplicate()
+			else:
+				mat = StandardMaterial3D.new()
+			mat.albedo_color = mat.albedo_color.lerp(destino, fuerza)
+			m.set_surface_override_material(i, mat)
 
 
 # ---------------------------------------------------------------- hitstop
@@ -83,7 +107,8 @@ func hitstop(strength: float = 1.0) -> void:
 	# de a uno y ahí el hitstop no desincroniza nada.
 	if NetworkManager.multiplayer_mode and NetworkManager.connected_peers.size() > 1:
 		return
-	_hitstop_until = Time.get_ticks_msec() / 1000.0 + HITSTOP_TIME * strength
+	var mult := minf(strength, HITSTOP_MAX_MULT)
+	_hitstop_until = Time.get_ticks_msec() / 1000.0 + HITSTOP_TIME * mult
 	if not _hitstop_on:
 		_hitstop_on       = true
 		Engine.time_scale = HITSTOP_SCALE

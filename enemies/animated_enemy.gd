@@ -60,6 +60,12 @@ func _ready():
 	_set_anim("idle")
 
 
+## Mientras dura la animación de ataque el enemigo queda comprometido: no gira.
+## Es lo que hace que rodearlo durante el wind-up sirva de algo.
+func esta_atacando() -> bool:
+	return _attacking
+
+
 func _find_anim(node: Node) -> AnimationPlayer:
 	if node == null:
 		return null
