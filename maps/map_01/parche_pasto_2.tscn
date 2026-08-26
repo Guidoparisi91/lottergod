@@ -1,9 +1,28 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/parche_pasto_2.png" id="tex"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/pasto_base.png" id="tex"]
+[ext_resource type="Shader" path="res://systems/zona_suelo.gdshader" id="sh"]
 
-[node name="ParchePasto2" type="Decal"]
-size = Vector3(7.0, 3, 7.0)
-texture_albedo = ExtResource("tex")
-upper_fade = 0.3
-lower_fade = 0.3
+[sub_resource type="PlaneMesh" id="plano"]
+size = Vector2(10, 10)
+
+[sub_resource type="ShaderMaterial" id="mat"]
+render_priority = 1
+shader = ExtResource("sh")
+shader_parameter/textura = ExtResource("tex")
+shader_parameter/repeticiones = 5.0
+shader_parameter/macro_escala = 0.22
+shader_parameter/macro_fuerza = 0.55
+shader_parameter/borde_inicio = 0.45
+shader_parameter/irregularidad = 0.18
+shader_parameter/opacidad = 0.85
+shader_parameter/tinte = Color(1, 1, 1, 1)
+shader_parameter/aspereza = 0.95
+shader_parameter/usar_normal = false
+shader_parameter/usar_ao = false
+
+[node name="ParchePasto2" type="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("plano")
+surface_material_override/0 = SubResource("mat")
+cast_shadow = 0

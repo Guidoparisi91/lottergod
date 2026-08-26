@@ -1,9 +1,34 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/parche_tierra.png" id="tex"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/tierra_base.png" id="tex"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/tierra_normal.png" id="nrm"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/tierra_ao.png" id="ao"]
+[ext_resource type="Shader" path="res://systems/zona_suelo.gdshader" id="sh"]
 
-[node name="ParcheTierra" type="Decal"]
-size = Vector3(6.0, 3, 6.0)
-texture_albedo = ExtResource("tex")
-upper_fade = 0.3
-lower_fade = 0.3
+[sub_resource type="PlaneMesh" id="plano"]
+size = Vector2(8, 8)
+
+[sub_resource type="ShaderMaterial" id="mat"]
+render_priority = 1
+shader = ExtResource("sh")
+shader_parameter/textura = ExtResource("tex")
+shader_parameter/repeticiones = 5.0
+shader_parameter/macro_escala = 0.22
+shader_parameter/macro_fuerza = 0.55
+shader_parameter/borde_inicio = 0.4
+shader_parameter/irregularidad = 0.18
+shader_parameter/opacidad = 0.85
+shader_parameter/tinte = Color(1, 1, 1, 1)
+shader_parameter/aspereza = 0.95
+shader_parameter/usar_normal = true
+shader_parameter/mapa_normal = ExtResource("nrm")
+shader_parameter/normal_fuerza = 1.8
+shader_parameter/usar_ao = true
+shader_parameter/mapa_ao = ExtResource("ao")
+shader_parameter/ao_fuerza = 0.75
+
+[node name="ParcheTierra" type="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("plano")
+surface_material_override/0 = SubResource("mat")
+cast_shadow = 0

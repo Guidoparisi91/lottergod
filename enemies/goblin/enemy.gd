@@ -19,6 +19,8 @@ func _ready():
 	attack_anim_speed = 1.5
 	hit_percent       = 0.45
 
-	hp_bar_height = 3.8
+	# Margen sobre la cabeza, NO altura absoluta: la altura sale de la cápsula.
+	hp_bar_height = 0.5
+	hp_bar_scale  = 1.5
 
 	super._ready()

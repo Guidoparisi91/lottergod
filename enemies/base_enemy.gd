@@ -563,15 +563,26 @@ func _alto_cabeza() -> float:
 	if _alto_cabeza_cache > 0.0:
 		return _alto_cabeza_cache
 
-	var tope := 0.0
-	for nodo in find_children("*", "MeshInstance3D", true, false):
-		var m := nodo as MeshInstance3D
-		if m == null or not m.visible or m.is_in_group("hp_bar_part"):
+	# Se mide contra la CÁPSULA DE COLISIÓN, no contra el AABB de las mallas.
+	#
+	# El AABB de un mesh con skeleton no es estable: una animación que estire un
+	# brazo lo expande, y como el recurso Mesh es COMPARTIDO entre instancias, ese
+	# valor inflado se lo comen todos los enemigos que spawneen después. Pasó: un
+	# golpe de la E dejó la barra por las nubes para todos los goblins siguientes.
+	#
+	# La cápsula es geometría fija y conocida, así que da siempre lo mismo.
+	var alto := 1.8
+	for hijo in get_children():
+		var c := hijo as CollisionShape3D
+		if c == null or c.shape == null:
 			continue
-		var caja: AABB = m.get_aabb()
-		var punta: Vector3 = m.global_transform * (caja.position + Vector3(0.0, caja.size.y, 0.0))
-		tope = maxf(tope, punta.y - global_position.y)
+		var forma: Shape3D = c.shape
+		if forma is CapsuleShape3D:
+			alto = (forma as CapsuleShape3D).height
+			break
+		if forma is BoxShape3D:
+			alto = (forma as BoxShape3D).size.y
+			break
 
-	# Sin mallas visibles todavía: fallback a la cápsula de colisión.
-	_alto_cabeza_cache = tope if tope > 0.1 else 1.8 * scale.y
+	_alto_cabeza_cache = alto * maxf(scale.y, 0.01)
 	return _alto_cabeza_cache

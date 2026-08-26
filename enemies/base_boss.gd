@@ -67,7 +67,7 @@ func _on_phase_changed(new_phase: int) -> void:
 	# Marca visual de que algo cambió: fogonazo y un pulso de números en rojo
 	CombatFeedback.flash(self, Color(1.0, 0.35, 0.15, 0.8))
 	CombatFeedback.death_burst(
-		global_position + Vector3(0.0, hp_bar_height * 0.5, 0.0),
+		global_position + Vector3(0.0, _alto_cabeza() * 0.5, 0.0),
 		feedback_scale * 0.7,
 		Color(1.0, 0.4, 0.1)
 	)
