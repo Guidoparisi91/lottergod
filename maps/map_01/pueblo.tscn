@@ -1,0 +1,77 @@
+[gd_scene format=3 uid="uid://db72b4yrg4pou"]
+
+[ext_resource type="Texture2D" uid="uid://c2hnlg6lgprty" path="res://assets/Textures/Piso/adoquin_piedra.png" id="1_7x0p0"]
+[ext_resource type="PackedScene" path="res://maps/map_01/casa_01.tscn" id="3_6s8n4"]
+[ext_resource type="PackedScene" path="res://maps/map_01/parche_pasto.tscn" id="5_nbxi5"]
+[ext_resource type="PackedScene" path="res://maps/map_01/parche_tierra.tscn" id="5_tyhja"]
+[ext_resource type="Texture2D" uid="uid://b2gim8ciinf21" path="res://assets/environment/medieval_village/Textures/T_UnevenBrick_Normal.png" id="piso_normal"]
+[ext_resource type="Texture2D" uid="uid://bsq551rs73w73" path="res://assets/environment/medieval_village/Textures/T_UnevenBrick_Roughness.png" id="piso_rough"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_piso"]
+size = Vector2(200, 200)
+
+[sub_resource type="StandardMaterial3D" id="Mat_piso"]
+albedo_texture = ExtResource("1_7x0p0")
+roughness_texture = ExtResource("piso_rough")
+normal_enabled = true
+normal_scale = 0.6
+normal_texture = ExtResource("piso_normal")
+uv1_scale = Vector3(15, 15, 1)
+
+[sub_resource type="BoxShape3D" id="Box_piso"]
+size = Vector3(200, 0.2, 200)
+
+[node name="Pueblo" type="Node3D" unique_id=2112387293]
+
+[node name="Piso" type="MeshInstance3D" parent="." unique_id=366712127]
+mesh = SubResource("PlaneMesh_piso")
+surface_material_override/0 = SubResource("Mat_piso")
+
+[node name="Colision" type="StaticBody3D" parent="Piso" unique_id=627504167]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Piso/Colision" unique_id=1478060371]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Box_piso")
+
+[node name="ParchePasto2" parent="Piso" unique_id=1491933173 instance=ExtResource("5_nbxi5")]
+transform = Transform3D(-0.37462473, 0, -0.92717654, 0, 1, 0, 0.92717654, 0, -0.37462473, 47.1352, 0, 68.729805)
+size = Vector3(100, 3, 100)
+modulate = Color(0.7708395, 0.77083945, 0.77083945, 1)
+
+[node name="ParchePasto4" parent="Piso" unique_id=1677214127 instance=ExtResource("5_nbxi5")]
+transform = Transform3D(-0.37462473, 0, -0.92717654, 0, 1, 0, 0.92717654, 0, -0.37462473, 52.235573, 0, 9.477394)
+size = Vector3(100, 3, 100)
+
+[node name="ParchePasto5" parent="Piso" unique_id=1010465145 instance=ExtResource("5_nbxi5")]
+transform = Transform3D(-0.37462473, 0, -0.92717654, 0, 1, 0, 0.92717654, 0, -0.37462473, 62.003853, 0, -55.6783)
+size = Vector3(100, 3, 100)
+
+[node name="ParcheTierra" parent="Piso" unique_id=1706681159 instance=ExtResource("5_tyhja")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -67.69404, 0, 68.789055)
+size = Vector3(100, 3, 100)
+modulate = Color(0.3598245, 0.28863096, 4.813075e-08, 1)
+
+[node name="ParcheTierra3" parent="Piso" unique_id=1056647296 instance=ExtResource("5_tyhja")]
+transform = Transform3D(0.38723603, 0, -0.9219806, 0, 1, 0, 0.9219806, 0, 0.38723603, -57.97477, 0, -54.452633)
+size = Vector3(100, 3, 100)
+modulate = Color(9.62615e-08, 0.47894466, 0.5075234, 1)
+
+[node name="ParcheTierra4" parent="Piso" unique_id=615480732 instance=ExtResource("5_tyhja")]
+transform = Transform3D(0.38723603, 0, -0.9219806, 0, 1, 0, 0.9219806, 0, 0.38723603, -57.092247, 0, 14.981129)
+size = Vector3(100, 3, 100)
+modulate = Color(0.44617677, 0, 0.23820001, 1)
+
+[node name="Edificios" type="Node3D" parent="." unique_id=2112814580]
+
+[node name="Casa01" parent="Edificios" unique_id=1778720800 instance=ExtResource("3_6s8n4")]
+transform = Transform3D(-1.2666932, 0, -1.5477365, 0, 2, 0, 1.5477365, 0, -1.2666932, -42.40953, 0, -25.49055)
+
+[node name="Casa02" parent="Edificios" unique_id=1520154085 instance=ExtResource("3_6s8n4")]
+transform = Transform3D(0.6506667, 0, -1.8911988, 0, 2, 0, 1.8911988, 0, 0.6506667, -47.485916, 0, 52.956665)
+
+[node name="Casa03" parent="Edificios" unique_id=674761705 instance=ExtResource("3_6s8n4")]
+transform = Transform3D(-0.7099353, 0, 1.8697572, 0, 2, 0, -1.8697572, 0, -0.7099353, 45.939186, 0, 11.345654)
+
+[node name="Props" type="Node3D" parent="." unique_id=1239852831]
+
+[node name="Luces" type="Node3D" parent="." unique_id=681436296]

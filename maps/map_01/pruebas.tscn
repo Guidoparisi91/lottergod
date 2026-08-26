@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://c1lsqd8jrmofh"]
+
+[ext_resource type="PackedScene" path="res://enemies/boss/goblin_king.tscn" id="boss"]
+[ext_resource type="Script" uid="uid://ccn3xsbfgnpc8" path="res://shared/iso_camera.gd" id="camera_script"]
+[ext_resource type="PackedScene" path="res://enemies/goblin/enemy.tscn" id="goblin"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="hud"]
+[ext_resource type="PackedScene" uid="uid://db72b4yrg4pou" path="res://maps/map_01/pueblo.tscn" id="pueblo"]
+[ext_resource type="Script" uid="uid://b2lfyb622u6dl" path="res://systems/wave_manager.gd" id="wave_script"]
+[ext_resource type="Script" uid="uid://bgwbu85r1hhjs" path="res://maps/map_01/world.gd" id="world_script"]
+
+[sub_resource type="Environment" id="env_pruebas"]
+background_mode = 1
+background_color = Color(0.13, 0.15, 0.18, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.46, 0.55, 1)
+ambient_light_energy = 0.4
+tonemap_mode = 4
+
+[node name="World" type="Node3D" unique_id=305143245]
+script = ExtResource("world_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1286739722]
+environment = SubResource("env_pruebas")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1802250369]
+transform = Transform3D(-0.8660239, -0.43301567, 0.2500004, 0, 0.49999797, 0.86602616, -0.50000304, 0.7499993, -0.43301004, 0, 0, 0)
+light_energy = 1.1
+shadow_enabled = true
+shadow_blur = 2.0
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 256.0
+
+[node name="IsoCamera" type="Camera3D" parent="." unique_id=59859658]
+script = ExtResource("camera_script")
+
+[node name="HUD" parent="." unique_id=1533190008 instance=ExtResource("hud")]
+
+[node name="Pueblo" parent="." unique_id=754819446 instance=ExtResource("pueblo")]
+
+[node name="SpawnerGoblins" type="Node3D" parent="." unique_id=53445920]
+script = ExtResource("wave_script")
+enemy_scene = ExtResource("goblin")
+min_spawn_interval = 0.6
+spawn_radius_min = 25.0
+spawn_radius_max = 35.0
+max_alive_base = 8
+max_alive_per_wave = 2
+spawn_alerted = false
+
+[node name="GoblinKing" parent="." unique_id=68277092 instance=ExtResource("boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36372757, 1, -24)
+body_scale = 6.0
+body_tint = Color(0.3491902, 0.025840001, 0.050708726, 0.48200002)
+
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1827121494]
+transform = Transform3D(-0.560572, 0, 0.82810575, 0, 1, 0, -0.82810575, 0, -0.560572, -6.123371, 0, -14.55897)

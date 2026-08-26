@@ -1,0 +1,89 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Corner_Exterior_Brick.gltf" id="esquina"]
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Wall_Plaster_Straight.gltf" id="muro"]
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Floor_Brick.gltf" id="piso"]
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Wall_Plaster_Door_Round.gltf" id="puerta"]
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Roof_RoundTiles_6x6.gltf" id="techo"]
+[ext_resource type="PackedScene" path="res://assets/environment/medieval_village/glTF/Wall_Plaster_Window_Thin_Round.gltf" id="ventana"]
+
+[node name="Casa01" type="Node3D"]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="Piso_0_0" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2, 0.01, -2)
+
+[node name="Piso_0_1" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2, 0.01, 0)
+
+[node name="Piso_0_2" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2, 0.01, 2)
+
+[node name="Piso_1_0" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.01, -2)
+
+[node name="Piso_1_1" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+
+[node name="Piso_1_2" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.01, 2)
+
+[node name="Piso_2_0" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2, 0.01, -2)
+
+[node name="Piso_2_1" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2, 0.01, 0)
+
+[node name="Piso_2_2" parent="." instance=ExtResource("piso")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2, 0.01, 2)
+
+[node name="Muro_Norte_0" parent="." instance=ExtResource("muro")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2, 0, -3)
+
+[node name="Muro_Norte_1" parent="." instance=ExtResource("puerta")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+
+[node name="Muro_Norte_2" parent="." instance=ExtResource("muro")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2, 0, -3)
+
+[node name="Muro_Sur_0" parent="." instance=ExtResource("muro")]
+transform = Transform3D(-1, 0, -0, 0, 1, 0, 0, 0, -1, -2, 0, 3)
+
+[node name="Muro_Sur_1" parent="." instance=ExtResource("ventana")]
+transform = Transform3D(-1, 0, -0, 0, 1, 0, 0, 0, -1, 0, 0, 3)
+
+[node name="Muro_Sur_2" parent="." instance=ExtResource("muro")]
+transform = Transform3D(-1, 0, -0, 0, 1, 0, 0, 0, -1, 2, 0, 3)
+
+[node name="Muro_Oeste_0" parent="." instance=ExtResource("muro")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, -2)
+
+[node name="Muro_Oeste_1" parent="." instance=ExtResource("ventana")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, 0)
+
+[node name="Muro_Oeste_2" parent="." instance=ExtResource("muro")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, 2)
+
+[node name="Muro_Este_0" parent="." instance=ExtResource("muro")]
+transform = Transform3D(-0, 0, 1, 0, 1, 0, -1, 0, -0, 3, 0, -2)
+
+[node name="Muro_Este_1" parent="." instance=ExtResource("ventana")]
+transform = Transform3D(-0, 0, 1, 0, 1, 0, -1, 0, -0, 3, 0, 0)
+
+[node name="Muro_Este_2" parent="." instance=ExtResource("muro")]
+transform = Transform3D(-0, 0, 1, 0, 1, 0, -1, 0, -0, 3, 0, 2)
+
+[node name="Esquina_NO" parent="." instance=ExtResource("esquina")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -3, 0, -3)
+
+[node name="Esquina_NE" parent="." instance=ExtResource("esquina")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3, 0, -3)
+
+[node name="Esquina_SO" parent="." instance=ExtResource("esquina")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -3, 0, 3)
+
+[node name="Esquina_SE" parent="." instance=ExtResource("esquina")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3, 0, 3)
+
+[node name="Techo" parent="." instance=ExtResource("techo")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.12, 0)

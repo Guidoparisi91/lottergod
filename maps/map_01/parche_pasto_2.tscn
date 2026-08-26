@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/parche_pasto_2.png" id="tex"]
+
+[node name="ParchePasto2" type="Decal"]
+size = Vector3(7.0, 3, 7.0)
+texture_albedo = ExtResource("tex")
+upper_fade = 0.3
+lower_fade = 0.3

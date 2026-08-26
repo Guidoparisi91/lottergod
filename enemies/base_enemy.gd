@@ -7,6 +7,8 @@ extends CharacterBody3D
 signal died(killer_id: int)
 
 const GRAVITY = -20.0
+## Por debajo de esta altura el enemigo se considera caído del mapa y se descarta.
+const VOID_Y  = -30.0
 
 @export var max_hp:        float = 5.0
 @export var speed:         float = 3.5
@@ -100,6 +102,13 @@ func _physics_process(delta):
 		global_position = global_position.lerp(_remote_pos, delta * 15.0)
 		rotation.y      = lerp_angle(rotation.y, _remote_rot_y, delta * 15.0)
 		_update_hp_bar()
+		return
+
+	# Red de seguridad: si se cayó del mapa, se descarta. Sin esto queda cayendo
+	# para siempre, sigue contando en el grupo "enemy" y ahoga al spawner, que
+	# nunca vuelve a llegar por debajo de su tope de vivos.
+	if global_position.y < VOID_Y:
+		_despawn_por_caida()
 		return
 
 	# Terrain3D genera chunks de colisión solo cerca de la cámara, así que
@@ -345,6 +354,15 @@ func configure(hp_mult: float, speed_mult: float) -> void:
 	max_hp     = max_hp * hp_mult
 	speed      = speed  * speed_mult
 	current_hp = max_hp
+
+## Se cayó del mundo. No es una muerte: no hay feedback, no da XP y no suma a
+## las bajas del jugador. Solo libera el cupo que ocupaba en el spawner.
+func _despawn_por_caida() -> void:
+	emit_signal("died", 0)
+	if NetworkManager.multiplayer_mode and is_multiplayer_authority():
+		_rpc_die.rpc(0)
+	queue_free()
+
 
 func _die():
 	_play_death_feedback()

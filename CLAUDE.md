@@ -1,7 +1,17 @@
 # LotterGod — ARPG Looter Extractor
 
 ## Stack
-Godot 4.6 · GDScript · Forward+ · Jolt Physics · ENet multiplayer · ZeroTier (VPN LAN, puerto 7777)
+Godot **4.7.2** - GDScript - Forward+ - Jolt Physics - ENet multiplayer - ZeroTier (VPN LAN, puerto 7777)
+
+**Ejecutable** (instalado con winget, no crea acceso directo ni asociación de archivos):
+`C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe`
+También responde `godot` desde la terminal (winget dejó un `godot.cmd` en el PATH).
+Hay accesos directos en el Escritorio: *Godot 4.7* y *LotterGod (Godot)*.
+
+> **Godot 4.7 reemplazó el AssetLib viejo por el Asset Store nuevo, y la migración de
+> plugins NO fue automática.** Muchos addons de años anteriores no aparecen en la
+> pestaña aunque existan y funcionen. Buscarlos directo en GitHub e instalar a mano
+> copiando la carpeta a `addons/`.
 
 ## Concepto
 ARPG top-down estilo Helbreath/LoL. Click-to-move, PvP + PvE, loot del equipamiento de enemigos/jugadores muertos. Progresión por nivel y stats.
@@ -12,22 +22,44 @@ ARPG top-down estilo Helbreath/LoL. Click-to-move, PvP + PvE, loot del equipamie
 ```
 characters/longsword/    longsword.tscn + longsword.gd
 enemies/
-  base_enemy.gd          clase base BaseEnemy (class_name)
+  base_enemy.gd          BaseEnemy      — estados, HP bar, daño, knockback
+  animated_enemy.gd      AnimatedEnemy  — animaciones Mixamo y ritmo de ataque
+  melee_enemy.gd         MeleeEnemy     — pega en rango
+  base_boss.gd           BaseBoss       — fases por HP, resistencia a knockback
   enemy_pit.gd           EnemyPit — spawner/zona de patrulla reutilizable (@tool)
-  goblin/                enemy.tscn + enemy.gd (extends BaseEnemy)
+  goblin/                enemy.tscn + enemy.gd (extends MeleeEnemy)
+  boss/                  goblin_king.tscn + goblin_king.gd (extends BaseBoss)
 systems/
   network/               network_manager.gd  ← Autoload "NetworkManager"
   stats/                 character_stats.gd  ← Resource "CharacterStats"
-maps/map_01/             world.tscn + world.gd
+  combat_feedback.gd     ← Autoload "CombatFeedback"
+  wave_manager.gd        WaveManager — oleadas por tiempo alrededor del jugador
+  terrain_manager.gd
+maps/map_01/
+  world.tscn/.gd         mapa original (con Terrain3D)
+  pueblo.tscn            EL MAPA — piso, casas, props, luces. Solo geometría.
+  pruebas.tscn           ESCENA JUGABLE — instancia pueblo + player, cámara,
+                         HUD, spawner, boss, PlayerSpawn. Es la que se corre.
+  casa_01.tscn           casa de ejemplo armada con piezas del kit
+  parche_tierra/pasto*   Decals para manchas y transiciones
+  zona_tierra/pasto      Planos superpuestos para cubrir áreas grandes
 ui/
   hud/                   hud.tscn + hud.gd
   lobby/                 lobby.tscn + lobby.gd
 shared/                  iso_camera.gd
 assets/characters/PlayerCharacterLongsword/   FBX Mixamo
-assets/Textures/         texturas terreno
+assets/environment/medieval_village/          Quaternius MegaKit (176 glTF)
+assets/Textures/Piso/    adoquin_*.png — variantes corregidas de color
+assets/Textures/Tierra/  tierra/pasto base + parches con alpha orgánico
 MapTerrain/              datos Terrain3D (data_directory del plugin)
 demo/                    demo Terrain3D — solo referencia, no tocar
+addons/3DGallery/        visor de modelos 3D (parcheado, ver abajo)
 ```
+
+**Separación de escenas:** `pueblo.tscn` es **solo el mapa** (geometría, sin lógica).
+`pruebas.tscn` es la **escena jugable** que lo instancia y le suma el jugador, la
+cámara, el HUD y los spawners. Se construye en una y se prueba con F6 en la otra.
+Los enemigos y el spawn del jugador van en `pruebas`, nunca en `pueblo`.
 
 ---
 
@@ -87,7 +119,33 @@ Tres barras apiladas en esquina inferior izquierda. Cada fila: `[Label fijo] [Pr
 ---
 
 ## Enemigos
-**BaseEnemy** (`enemies/base_enemy.gd`): estados `IDLE / PATROL / CHASE`, HP bar 3D billboard, knockback.
+
+**Jerarquía** (refactorizada 2026-08-25):
+```
+BaseEnemy → AnimatedEnemy → MeleeEnemy → GoblinEnemy
+                                      → BaseBoss → GoblinKing
+                         → RangedEnemy → (futuro)
+```
+- **BaseEnemy** — estados, HP bar, daño, muerte, knockback, sincronización de red
+- **AnimatedEnemy** — capa de presentación: animaciones Mixamo separadas por nodo y
+  ritmo de ataque. Dispara `_deliver_hit()` en el frame correcto; no decide qué hace
+  el golpe. Exports: `body_scale`, `attack_anim_speed`
+- **MeleeEnemy** — implementa `_deliver_hit()` pegando en rango
+- **BaseBoss** — `knockback_resistance` alto, wind-up lento, fases por umbral de HP
+  (`_on_phase_changed()`), feedback amplificado vía `feedback_scale`
+
+**Puntos únicos de entrada** (respetarlos al extender):
+- `_apply_damage(amount)` — **todo** lo que baja HP pasa por acá
+- `_on_damaged(amount)` — hook para subclases (fases, enrage, gritos)
+- `_get_sync_anim()` / `_apply_sync_anim()` — animación en multijugador
+
+**Caída del mapa:** por debajo de `VOID_Y = -30` el enemigo se descarta solo con
+`_despawn_por_caida()`. **No es una muerte**: no da XP, no dispara el estallido y no
+suma bajas — solo libera el cupo. Sin esto, un enemigo cayendo al vacío queda vivo
+para siempre en el grupo `enemy` y ahoga al spawner, que nunca vuelve a bajar de su
+tope de vivos.
+
+**BaseEnemy** (`enemies/base_enemy.gd`): estados `IDLE / PATROL / CHASE / APPROACH`, HP bar 3D billboard, knockback.
 
 **Sistema de patrulla:**
 - Estado inicial: `PATROL` → camina a punto random dentro de `patrol_size` (Vector2) centrado en `spawn_position`
@@ -128,6 +186,86 @@ Para agregar enemigo nuevo: crear carpeta en `enemies/`, extender `BaseEnemy`, s
 
 ---
 
+## Spawners — dos sistemas distintos
+
+| | `EnemyPit` | `WaveManager` |
+|---|---|---|
+| Dónde spawnea | Zona fija del mapa | **Alrededor del jugador**, radio configurable |
+| Cuántos | Tope fijo (`max_enemies`) | Escala por oleada |
+| Comportamiento | Patrullan hasta verte | Depende de `spawn_alerted` |
+| Ritmo | Constante | Oleadas por tiempo, cada vez más rápido |
+| Metáfora | Un **nido**: lo encontrás y lo limpiás | Un **asedio**: te llueven encima |
+
+**WaveManager** (`systems/wave_manager.gd`, grupo `wave_manager`):
+- `spawn_alerted = true` → nacen en `APPROACH`, van hacia el jugador **ignorando
+  `detection_range`**. El `spawn_radius` solo define cuánto tardan en llegar.
+- `spawn_alerted = false` → nacen en `PATROL` con área propia de 12×12 y solo
+  reaccionan al entrar en `detection_range`. Ahí el `spawn_radius` **sí** importa
+  y el mapa (esquinas, líneas de visión) pasa a ser mecánica.
+- Nunca spawnea sin suelo: prueba `INTENTOS_SPAWN = 8` ángulos con raycast hacia
+  abajo y, si ninguno da, **saltea el tick** en vez de soltar un enemigo al vacío.
+- Señales listas para el HUD: `wave_started(wave)`, `stats_changed(wave, kills)`.
+  Lleva `current_wave` y `kills_total`. **Todavía sin conectar al HUD.**
+
+## Mapa — el pueblo
+
+Construcción con el **Medieval Village MegaKit de Quaternius** (CC0, 176 piezas glTF).
+Es un **kit de construcción**: no trae casas enteras, se arman con muros de 2 m,
+esquinas y techos. Ver `casa_01.tscn` como referencia de encastre.
+
+**Medidas del kit:** muros 2,00 × 3,12 m (centrados en X, base en Y=0) · piso 2 × 2 m
+· `Roof_RoundTiles_6x6` cubre 8,24 m con aleros, hecho para una planta de 6 × 6.
+
+**Escala:** el pack está en escala real correcta; **el personaje está sobredimensionado**
+(su cápsula dice 1,80 m pero el modelo se ve como 3,50). Se compensa escalando el
+mundo ×2 — `casa_01.tscn` tiene `scale = 2` en su raíz. **Deuda técnica**: lo correcto
+sería achicar el personaje y recalibrar `TILE_SIZE`, rango de ataque y distancia de
+cámara de una vez.
+
+**Suelo:** un `PlaneMesh` grande con textura tileada como base, y encima:
+- **Decals** (`parche_*.tscn`) para manchas y transiciones — no dan z-fighting
+- **Planos superpuestos** (`zona_*.tscn`, y = 0.05) para cubrir áreas grandes de verdad
+- La combinación: zona para el área, parches en el borde para romper la línea recta
+
+**Color:** las texturas del pack son **cálidas por diseño** (pueblo mediterráneo
+soleado): revoque +48 de amarillez (R−B), tejas +130, madera +62. Para corregir,
+**no desaturar** —mata el color y queda gris muerto— sino **subir el azul y bajar
+apenas el rojo**, que quita el tinte y conserva la vida. Ver `assets/Textures/Piso/`
+para la escala de variantes ya generadas del adoquín.
+
+**Iluminación:** ambiente **azulado** de baja energía + sol **cálido** = sombras frías,
+luces cálidas. Un ambiente gris parejo aplasta la geometría. `tonemap_mode`: usar
+**AgX (4)**, neutro; ACES (3) empuja todo hacia el naranja.
+
+**Spawn del jugador:** un `Marker3D` llamado exactamente **`PlayerSpawn`** en la raíz
+de la escena. `world.gd → _spawn_origin()` lo busca por nombre; sin él cae en la
+constante `SPAWN_ORIGIN`. Ponerlo con `Y = 2` para que el personaje apoye bien.
+
+## CombatFeedback (`systems/combat_feedback.gd`, autoload)
+
+Flash de golpe, números de daño flotantes, hitstop y estallido de muerte. Puramente
+visual, **sin sincronización de red**: cada cliente lo genera del daño que ya recibió.
+Se dispara **antes** del redirect al host, para que quien pega vea el golpe sin
+esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
+
+## Trampas de trabajo (aprendidas a los golpes)
+
+- **Godot pisa los archivos que tiene abiertos.** Si una escena está abierta en el
+  editor, cualquier edición del `.tscn` desde afuera se pierde en el próximo guardado.
+  **Antes de editar un `.tscn` por fuera, cerrar esa pestaña en Godot.**
+- **Asignar un script REEMPLAZA el que había.** Un nodo tiene un solo script y Godot
+  no avisa. Los spawners y marcadores van siempre en un `Node3D` **nuevo y vacío**,
+  nunca encima de un nodo que ya tiene script.
+- **`.glb` sobre `.fbx`.** El FBX de Mixamo metió 5 copias de cada textura. Godot
+  también importa `.blend` nativo si Blender está configurado en Editor Settings.
+- **El sufijo `-col` en el nombre del objeto** genera colisión automática al importar.
+  `-colonly` para bloqueadores invisibles, `-noimp` para descartar.
+- **`_setup_atmosphere()` respeta la escena:** si el `WorldEnvironment` ya tiene un
+  Environment asignado, la función retorna sin tocar nada. La iluminación se ajusta
+  visualmente, no por código.
+- **`addons/3DGallery` está parcheado**: el original crasheaba en `GalleryManager.gd:30`
+  al mover el mouse sin modelo cargado. Si se reinstala, el parche se pierde.
+
 ## Cámara (`shared/iso_camera.gd`)
 Isométrica. Pitch −30° a −80° (default −60°), yaw libre con click medio. Zoom ARM 5–20 (arranca en 20).
 
@@ -153,8 +291,16 @@ Jugadores remotos en grupo `player_remote`, spawneados como `Player_{peer_id}`.
 
 ---
 
-## Terreno
+## Terreno — **en salida**
 Plugin Terrain3D. `data_directory = "res://MapTerrain"`. No recibe sombras de objetos dinámicos (limitación del plugin). `DirectionalLight3D`: shadow_enabled, max_distance 256, blur 2.0.
+
+> **Terrain3D no sobrevive a la web.** Su export HTML5 es experimental y exige hilos
+> con `SharedArrayBuffer` más aislamiento cross-origin; los portales sirven builds de
+> **un solo hilo** (el modo por defecto desde Godot 4.3 y el único que aceptan Poki y
+> CrazyGames). Son incompatibles. `pueblo.tscn` ya se construye sin Terrain3D, y el
+> código lo tolera: `base_enemy.gd` y `enemy_pit.gd` chequean
+> `if _terrain and is_instance_valid(_terrain)` y caen a física normal si no está.
+> Queda por sacarlo de `world.tscn` y borrar el plugin (~50 MB de binarios).
 
 ## Input map
 `shift_run` → Shift · `skill_q` → Q · `skill_w` → W · `skill_e` → E

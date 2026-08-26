@@ -124,6 +124,40 @@ personas estén online al mismo tiempo.
 
 ## 5. La decisión de distribución
 
+> **Actualizado 2026-08-25 con datos de mercado.** Ver §13 para la investigación
+> completa. Resumen: web-first se confirma, **pero itch.io no es el canal**.
+
+**[DECIDIDO] Web primero. El canal es CrazyGames, no itch.io.**
+
+Los números que lo deciden:
+
+| Canal | Alcance | Ingreso realista | Veredicto |
+|---|---|---|---|
+| CrazyGames | 50 M jugadores/mes, 300 M partidas/mes | USD 500–3.000/mes | **Canal principal** |
+| itch.io | ~4.800 partidas en el percentil 70, sin cola larga | ≈ USD 0 | Vidriera y devlogs |
+| Steam (indie) | 500–2.000 copias de mediana | USD 5.000–15.000 | Mediana brutal |
+| Steam (roguelite) | 8.000–20.000 copias | USD 100.000–300.000 | Destino, no arranque |
+
+CrazyGames acepta Godot oficialmente, tiene SDK, paga **60% de la publicidad** y 70%
+de las compras, y su *Basic Launch* mide dos semanas de retención y tiempo de juego
+reales **antes** de que exista monetización — o sea que **la señal que buscábamos
+sale gratis**.
+
+**Límites técnicos duros:** 50 MB de carga inicial, 250 MB totales, menos de 1.500
+archivos. Un proyecto **vacío** de Unreal pesa 300–321 MB, y UE no exporta a HTML5
+desde la 4.24 — por eso migrar de motor está descartado (§13.4).
+
+**[DESCARTADO] itch.io como canal.** El razonamiento original —sin audiencia, lo que
+manda es la fricción— era correcto; la plataforma estaba mal elegida. itch cicla
+novedades rápido y no empuja tráfico sostenido. Queda como vidriera y para devlogs.
+
+**[RESUELTO] Terrain3D no exporta a web.** Confirmado: su export HTML5 es experimental
+y exige `SharedArrayBuffer` más aislamiento cross-origin, mientras que los portales
+sirven builds de un solo hilo. Son incompatibles. **Ya se está trabajando sin él.**
+
+<details>
+<summary>Razonamiento original (histórico)</summary>
+
 **[TENDENCIA] Web primero (itch.io + export HTML5).**
 
 Razón: el problema número uno no es el diseño, es que **no hay a quién
@@ -152,6 +186,8 @@ lanzamiento sin audiencia. Sigue siendo válido más adelante.
 
 **[DESCARTADO] ZeroTier.** Sirve para probar entre nosotros, pero es un muro
 absoluto para cualquier desconocido.
+
+</details>
 
 ---
 
@@ -388,11 +424,120 @@ tiempo perdido en arrancarlas antes de cerrar el concepto:
 1. **Catalogar los bugs del combate.** Pendiente de Guido. Es el activo que
    estamos rescatando, y con el diseño de fantasmas el combate pasa a ser también
    el motor del idle y del PvP asincrónico — **cada bug ahí ahora vale triple.**
-2. **Armar el pueblo a mano.** Se necesita en todos los escenarios. Guido tiene
-   experiencia de mapas en UE.
-3. **Buscar assets** medieval-oscuro-abandonado, livianos para web.
+2. ~~**Armar el pueblo a mano.**~~ **EN CURSO desde 2026-08-25.** Ver §14.
+3. ~~**Buscar assets**~~ **HECHO.** Quaternius Medieval Village MegaKit (CC0).
 
-Pendiente de mantenimiento: `CLAUDE.md` todavía no refleja la jerarquía nueva de
-enemigos, `CombatFeedback` ni el sistema de bosses. Además `project.godot` pasó a
-`config/features = "4.7"` — el proyecto se abrió con Godot 4.7, pero `CLAUDE.md`
-dice 4.6.
+Pendiente de mantenimiento: ~~`CLAUDE.md` desactualizado~~ **actualizado 2026-08-25.**
+
+---
+
+## 13. Investigación de mercado (2026-08-25)
+
+Documento completo: **[Tres Rutas para LotterGod](https://claude.ai/code/artifact/e1649f71-ba39-4b5d-8a76-29c9b0afe0f3)**
+
+### 13.1 La extracción PvE funciona sola — **[REABRE §8.1]**
+
+*Escape from Duckov*: extraction shooter **top-down, un solo jugador**, cinco personas,
+**3,8 millones de copias**, 96% positivo, 300 K jugadores simultáneos.
+
+El descarte de §8.1 era correcto para la extracción **PvP**. La variante **PvE** es hoy
+uno de los géneros más validados del mercado. Y el propio documento ya tenía la pieza:
+*"la mecánica de la puerta es una fuente de tensión que no necesita otros jugadores"*.
+La tensión no la genera otro jugador: la genera **la mochila llena y el camino de vuelta**.
+
+### 13.2 Lo que el mercado pide
+
+- Sesiones de **20–40 minutos**, onboarding rápido, algo **finito**
+- **Fatiga declarada de live-service** — esto rema en contra del idle (§9)
+- El roguelite es el género que mejor convierte en Steam, no por el género sino porque
+  **la meta-progresión convierte al que abandona frustrado en alguien que vuelve**
+- Distribución brutal en web: 80% de los juegos gana USD 0–50/mes, **menos del 1% pasa
+  de 2.000**. El rango realista para nosotros es **USD 200–2.000/mes**
+
+### 13.3 Lo que enseña EvoWars.io (top 1 de CrazyGames)
+
+Hallazgo de Guido. Es .io, top-down, con evolución dentro de la partida. Tres lecciones:
+
+1. **Se explica en un GIF de tres segundos.** No tiene extracción, loot, ni
+   meta-progresión. Tiene **una idea legible al instante**.
+2. **Salió en marzo de 2018.** El top 1 es inercia acumulada, no un lanzamiento.
+3. Su tráfico es tier-3 (Vietnam): mucho volumen, eCPM de USD 1–3 contra 15–28 en EEUU.
+
+**La consecuencia para nosotros:** en un portal donde se elige por miniatura,
+**explicar es perder**. Cualquier concepto que necesite un párrafo está en desventaja.
+
+### 13.4 Migrar a Unreal — **[DESCARTADO, con datos]**
+
+- **UE no exporta a HTML5** desde la 4.24 y UE5 nunca lo repuso. La única vía a
+  navegador es Pixel Streaming: un servidor con GPU por jugador simultáneo.
+- Un proyecto **vacío** de UE5 pesa **300–321 MB** empaquetado. CrazyGames acepta
+  50 MB iniciales. No entra ni estando vacío.
+- Se tirarían los 17 scripts: combate, jerarquía de enemigos, netcode, CombatFeedback.
+
+Migrar = renunciar al único canal con tráfico real que además paga.
+
+**El contraargumento que sí es real:** si trabajar en Godot resulta insoportable, la
+estrategia no importa — un dev que pelea con su herramienta no termina el juego, y
+este proyecto ya se abandonó una vez. Ese riesgo es más grande que cualquier cálculo
+de mercado. La mitigación acordada: Guido no toca código; su superficie de contacto
+con Godot es el editor de escenas, y las tareas repetitivas se automatizan.
+
+---
+
+## 14. Estado real al cierre del 2026-08-25
+
+### El concepto sigue sin cerrar
+
+Frase textual de Guido: **"todavía no siento la razón del juego"**. Se propuso un
+roguelite de extracción PvE (§13.1) y **no convenció**. Su objeción, que es correcta:
+*"por ahí estamos muy encasillados en un extractor"*. Sumado a §13.3, el problema es
+que ese concepto **necesita un párrafo para explicarse**.
+
+**[ABIERTO] La pregunta que reemplaza a "qué género".** Dejamos de elegir paquetes
+cerrados. La pregunta operativa pasó a ser: **¿cuál es nuestro GIF de tres segundos?**
+
+### 14.1 Robar habilidades — **[ABIERTO, propuesta sin evaluar]**
+
+> **Matás un enemigo y te quedás con su habilidad.**
+
+El goblin te da su swipe, el Goblin King su embestida. Cuatro slots. La decisión no es
+"¿subo ataque?" sino "¿cambio la que tengo por esta?".
+
+**A favor:** se ve en tres segundos · progresión que cambia decisiones y no números
+(§4) · genera los clips de *"mirá la combinación que me salió"* · **convierte la
+jerarquía de enemigos en un sistema de contenido**: cada enemigo nuevo es una
+habilidad nueva · es **agnóstico del envase** — funciona en arena, en oleadas o con
+extracción encima, así que el envase se elige después.
+
+**Sin evaluar todavía.** Se prueba en una tarde con lo que ya está en el repo.
+
+### 14.2 Corrección: el .io con bots se descartó mal
+
+Se descartó la arena .io (§8.2, idea de Guido) por servidores caros y falta de
+población. **Los .io resuelven eso con bots** — por eso Agar.io y Slither.io nunca
+están vacíos. Y nosotros ya tenemos IA de enemigos y **el fantasma diseñado en §9 es
+exactamente ese bot**, sin necesidad de backend.
+
+§8.2 vuelve a estar sobre la mesa, y era mejor idea que la extracción.
+
+### 14.3 El camino elegido para hoy: construir en vez de decidir
+
+Decisión de Guido, y es la correcta: **empezar por lo que mejora el juego en
+cualquier escenario** — mapa, sonido, UI. Con el fundamento agregado de que
+**prototipar con sensación revela el concepto**: es más probable que la razón del
+juego aparezca jugando un pueblo con sonido que discutiéndola en abstracto.
+
+**Avanzado hoy:** el pueblo (§6) pasó de idea a escena jugable — piso de 200 × 200,
+kit modular importado, primeras casas, parches de tierra y pasto, iluminación y
+paleta corregidas, spawner de oleadas funcionando. Ver `CLAUDE.md` para el detalle
+técnico y **[Armar el Pueblo](https://claude.ai/code/artifact/9765642f-e4a4-4539-88d1-13b20263b739)**
+para el flujo de trabajo.
+
+**Pendiente inmediato:** sonido (**el proyecto sigue mudo** y es el arreglo más barato
+y más grande disponible), colisión en las casas, y conectar `wave_manager` al HUD.
+
+### 14.4 Presupuesto
+
+**Sigue intacto: USD 0 gastados.** Todo lo usado hoy es CC0 o gratis — Quaternius,
+Sonniss GDC, Kenney, ambientCG. La regla de §10 (no boostear en frío) sigue en pie y
+ahora tiene respaldo: el *Basic Launch* de CrazyGames da la señal de retención gratis.

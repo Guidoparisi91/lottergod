@@ -37,13 +37,23 @@ func _ready():
 
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
+## Punto de aparición del jugador. Si la escena tiene un nodo llamado
+## "PlayerSpawn" (un Marker3D alcanza), manda su posición — así el spawn se
+## mueve visualmente en el editor. Sin ese nodo, cae en SPAWN_ORIGIN.
+func _spawn_origin() -> Vector3:
+	var marca := get_node_or_null("PlayerSpawn")
+	if marca is Node3D:
+		return (marca as Node3D).global_position
+	return SPAWN_ORIGIN
+
+
 func _spawn_player(peer_id: int):
 	var p = player_scene.instantiate()
 	p.name = "Player_%d" % peer_id
 	p.set_multiplayer_authority(peer_id)
 
 	var idx       = NetworkManager.connected_peers.find(peer_id)
-	var spawn_pos = SPAWN_ORIGIN + Vector3(max(0, idx) * 2.0, 0.0, 0.0)
+	var spawn_pos = _spawn_origin() + Vector3(max(0, idx) * 2.0, 0.0, 0.0)
 	p.position    = spawn_pos
 
 	add_child(p)
@@ -190,7 +200,14 @@ func _on_attack_finished():
 			local_player.attack_target(result.collider)
 
 
+## Atmósfera por defecto (día normal). Solo se aplica si la escena NO trae la
+## suya: si el WorldEnvironment ya tiene un Environment asignado en el editor,
+## manda la escena y esta función no toca nada. Así la iluminación se ajusta
+## visualmente y no por código.
 func _setup_atmosphere():
+	if $WorldEnvironment.environment != null:
+		return
+
 	# --- Sky ---
 	var sky_mat = ProceduralSkyMaterial.new()
 	# Sky — valores por defecto de día normal
