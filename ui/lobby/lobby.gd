@@ -59,4 +59,4 @@ func _update_peers():
 @rpc("authority", "call_local", "reliable")
 func _load_world(peers: Array):
 	NetworkManager.connected_peers = peers
-	get_tree().change_scene_to_file("res://maps/map_01/world.tscn")
+	get_tree().change_scene_to_file("res://maps/map_01/pruebas.tscn")

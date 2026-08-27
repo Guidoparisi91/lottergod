@@ -4,6 +4,7 @@
 
 # Temporales de Windows al recargar GDExtension en uso
 ~*.dll
+~*.dll*.TMP
 
 # ZIPs de packs de assets (se descomprimen, no se versionan)
 *.zip

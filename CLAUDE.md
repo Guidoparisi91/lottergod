@@ -1,17 +1,17 @@
 # LotterGod — ARPG Looter Extractor
 
 ## Stack
-Godot **4.7.2** - GDScript - Forward+ - Jolt Physics - ENet multiplayer - ZeroTier (VPN LAN, puerto 7777)
+Godot **4.6.2** - GDScript - Forward+ - Jolt Physics - ENet multiplayer - puerto 7777
+(LAN local por IP directa, o ZeroTier si las maquinas no comparten red)
 
-**Ejecutable** (instalado con winget, no crea acceso directo ni asociación de archivos):
-`C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe`
-También responde `godot` desde la terminal (winget dejó un `godot.cmd` en el PATH).
-Hay accesos directos en el Escritorio: *Godot 4.7* y *LotterGod (Godot)*.
+**Ejecutable** (zip portable, no está en el PATH ni tiene acceso directo):
+`D:\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64.exe` — la carpeta se llama
+igual que el exe. Al lado está la variante `_console` que hace falta para validar scripts.
 
-> **Godot 4.7 reemplazó el AssetLib viejo por el Asset Store nuevo, y la migración de
-> plugins NO fue automática.** Muchos addons de años anteriores no aparecen en la
-> pestaña aunque existan y funcionen. Buscarlos directo en GitHub e instalar a mano
-> copiando la carpeta a `addons/`.
+> **El AssetLib viejo quedó reemplazado por el Asset Store nuevo y la migración de plugins
+> NO fue automática.** Muchos addons de años anteriores no aparecen en la pestaña aunque
+> existan y funcionen. Buscarlos directo en GitHub e instalar a mano copiando la carpeta
+> a `addons/`.
 
 ## Concepto
 ARPG top-down estilo Helbreath/LoL. Click-to-move, PvP + PvE, loot del equipamiento de enemigos/jugadores muertos. Progresión por nivel y stats.
@@ -39,7 +39,7 @@ maps/map_01/
   world.tscn/.gd         mapa original (con Terrain3D)
   pueblo.tscn            EL MAPA — piso, casas, props, luces. Solo geometría.
   pruebas.tscn           ESCENA JUGABLE — instancia pueblo + player, cámara,
-                         HUD, spawner, boss, PlayerSpawn. Es la que se corre.
+						 HUD, spawner, boss, PlayerSpawn. Es la que se corre.
   casa_01.tscn           casa de ejemplo armada con piezas del kit
   parche_tierra/pasto*   Decals para manchas y transiciones
   zona_tierra/pasto      Planos superpuestos para cubrir áreas grandes
@@ -123,8 +123,8 @@ Tres barras apiladas en esquina inferior izquierda. Cada fila: `[Label fijo] [Pr
 **Jerarquía** (refactorizada 2026-08-25):
 ```
 BaseEnemy → AnimatedEnemy → MeleeEnemy → GoblinEnemy
-                                      → BaseBoss → GoblinKing
-                         → RangedEnemy → (futuro)
+									  → BaseBoss → GoblinKing
+						 → RangedEnemy → (futuro)
 ```
 - **BaseEnemy** — estados, HP bar, daño, muerte, knockback, sincronización de red
 - **AnimatedEnemy** — capa de presentación: animaciones Mixamo separadas por nodo y
@@ -321,7 +321,7 @@ esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
   al mover el mouse sin modelo cargado. Si se reinstala, el parche se pierde.
 - **Para validar que los scripts compilan**, el comando es:
   ```
-  Godot_v4.7.2-stable_win64_console.exe --headless --editor --quit --path .
+  Godot_v4.6.2-stable_win64_console.exe --headless --editor --quit --path .
   ```
   `--headless --quit` a secas **NO compila los scripts** y da falso "todo bien".
   Solo `--editor` fuerza el escaneo y regenera `global_script_class_cache.cfg`.
@@ -352,7 +352,15 @@ Crosshair blanco 24x24 generado por código. Rojo sobre grupo `enemy` o `player_
 
 **Enemigos** — host-autoritativo (ver sección Enemigos arriba).
 
-**Flujo lobby:** Host → clientes se unen con ZeroTier IP → host clickea Iniciar → `change_scene_to_file("res://maps/map_01/world.tscn")`. Todos los peers conectan antes de cargar el mapa (no hay late-join).
+**Flujo lobby:** Host → clientes se unen con la IP del host → host clickea Iniciar →
+`change_scene_to_file("res://maps/map_01/pruebas.tscn")`. Todos los peers conectan antes de
+cargar el mapa (no hay late-join).
+
+**Probar en dos maquinas de la misma WiFi:** no hace falta ZeroTier, alcanza con la IP
+local del host (`ipconfig` → adaptador Wi-Fi). ENet usa **UDP**: si el firewall de
+Windows nunca pregunto, hay que abrir el 7777 UDP a mano en el host. Las dos maquinas
+tienen que correr **la misma version de Godot**: si no, cada una reimporta los assets y
+los `.import` rebotan en git de un lado al otro.
 
 Jugadores remotos en grupo `player_remote`, spawneados como `Player_{peer_id}`.
 

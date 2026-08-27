@@ -10,8 +10,8 @@ func _ready():
 	max_hp          = 50.0
 	speed           = 3.5
 	detection_range = 10.0
-	attack_range    = 2.0
-	attack_damage   = 5.0
+	attack_range    = 2.5
+	attack_damage   = 30.0
 	attack_cooldown = 1.5
 	xp_reward       = 120
 

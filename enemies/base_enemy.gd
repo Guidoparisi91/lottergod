@@ -392,7 +392,21 @@ func _enemy_separation_force() -> Vector3:
 	return force * 1.8
 
 func _do_attack():
-	player.take_damage(attack_damage)
+	_damage_player(player, attack_damage)
+
+
+## El HP de cada jugador lo lleva su propio dueno. La IA del enemigo corre solo
+## en el host, asi que si le pega a la copia local de un jugador remoto el golpe
+## se pierde: el proximo `_sync_state` del dueno pisa el HP y el cliente nunca
+## ve el dano. Todo dano a un jugador pasa por aca.
+func _damage_player(target: Node, amount: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	var owner_id := target.get_multiplayer_authority()
+	if NetworkManager.multiplayer_mode and owner_id != multiplayer.get_unique_id():
+		target.take_damage_rpc.rpc_id(owner_id, amount)
+	else:
+		target.take_damage(amount)
 
 func take_damage(amount: float):
 	# El feedback va ANTES del redirect a red: quien pega tiene que ver el golpe

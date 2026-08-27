@@ -56,7 +56,7 @@ func _deliver_hit() -> void:
 	if _angulo_al_frente(hacia) > hit_arc_degrees:
 		return
 
-	player.take_damage(attack_damage)
+	_damage_player(player, attack_damage)
 	_on_hit_landed()
 
 
