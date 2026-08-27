@@ -1,12 +1,20 @@
 # LotterGod — ARPG Looter Extractor
 
 ## Stack
-Godot **4.6.2** - GDScript - Forward+ - Jolt Physics - ENet multiplayer - puerto 7777
+Godot **4.7.2** - GDScript - Forward+ - Jolt Physics - ENet multiplayer - puerto 7777
 (LAN local por IP directa, o ZeroTier si las maquinas no comparten red)
 
-**Ejecutable** (zip portable, no está en el PATH ni tiene acceso directo):
-`D:\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64.exe` — la carpeta se llama
-igual que el exe. Al lado está la variante `_console` que hace falta para validar scripts.
+**Las dos maquinas van con la misma version.** Si una abre el proyecto con otra, los
+`.import` se reescriben y rebotan en git en cada pull. Instalar siempre con:
+`winget install --id GodotEngine.GodotEngine --exact`
+
+**Ejecutable** (winget, mismo layout en las dos maquinas salvo el nombre de usuario):
+`%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe`
+Winget deja los alias `godot` y `godot_console` en el PATH (hay que reabrir la terminal).
+El `_console` es el que hace falta para validar scripts.
+
+> En esta PC quedó también el 4.6.2 portable suelto en `D:\Godot_v4.6.2-stable_win64.exe\`.
+> **No abrir el proyecto con ese.**
 
 > **El AssetLib viejo quedó reemplazado por el Asset Store nuevo y la migración de plugins
 > NO fue automática.** Muchos addons de años anteriores no aparecen en la pestaña aunque
@@ -321,7 +329,7 @@ esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
   al mover el mouse sin modelo cargado. Si se reinstala, el parche se pierde.
 - **Para validar que los scripts compilan**, el comando es:
   ```
-  Godot_v4.6.2-stable_win64_console.exe --headless --editor --quit --path .
+  Godot_v4.7.2-stable_win64_console.exe --headless --editor --quit --path .
   ```
   `--headless --quit` a secas **NO compila los scripts** y da falso "todo bien".
   Solo `--editor` fuerza el escaneo y regenera `global_script_class_cache.cfg`.
