@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c3u17ys0soeyk"
 path.s3tc="res://.godot/imported/Grass004_1K-PNG_Displacement.png-6a939207934ca90b5aba2eca8edb3b8b.s3tc.ctex"
+path.etc2="res://.godot/imported/Grass004_1K-PNG_Displacement.png-6a939207934ca90b5aba2eca8edb3b8b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Pasto/Grass004_1K-PNG_Displacement.png"
-dest_files=["res://.godot/imported/Grass004_1K-PNG_Displacement.png-6a939207934ca90b5aba2eca8edb3b8b.s3tc.ctex"]
+dest_files=["res://.godot/imported/Grass004_1K-PNG_Displacement.png-6a939207934ca90b5aba2eca8edb3b8b.s3tc.ctex", "res://.godot/imported/Grass004_1K-PNG_Displacement.png-6a939207934ca90b5aba2eca8edb3b8b.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://m65eqewas8jh"
 path.s3tc="res://.godot/imported/Bark_TwistedTree_Normal.png-ef07eb6f58dec3de83d3f2f44d9822b9.s3tc.ctex"
+path.etc2="res://.godot/imported/Bark_TwistedTree_Normal.png-ef07eb6f58dec3de83d3f2f44d9822b9.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/environment/nature_quaternius/Bark_TwistedTree_Normal.png"
-dest_files=["res://.godot/imported/Bark_TwistedTree_Normal.png-ef07eb6f58dec3de83d3f2f44d9822b9.s3tc.ctex"]
+dest_files=["res://.godot/imported/Bark_TwistedTree_Normal.png-ef07eb6f58dec3de83d3f2f44d9822b9.s3tc.ctex", "res://.godot/imported/Bark_TwistedTree_Normal.png-ef07eb6f58dec3de83d3f2f44d9822b9.etc2.ctex"]
 
 [params]
 

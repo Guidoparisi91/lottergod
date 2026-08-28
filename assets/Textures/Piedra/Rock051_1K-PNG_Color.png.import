@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2kcses5vblk2"
 path.s3tc="res://.godot/imported/Rock051_1K-PNG_Color.png-f260861ce7bb69a0d11de2ae7804d3f2.s3tc.ctex"
+path.etc2="res://.godot/imported/Rock051_1K-PNG_Color.png-f260861ce7bb69a0d11de2ae7804d3f2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Piedra/Rock051_1K-PNG_Color.png"
-dest_files=["res://.godot/imported/Rock051_1K-PNG_Color.png-f260861ce7bb69a0d11de2ae7804d3f2.s3tc.ctex"]
+dest_files=["res://.godot/imported/Rock051_1K-PNG_Color.png-f260861ce7bb69a0d11de2ae7804d3f2.s3tc.ctex", "res://.godot/imported/Rock051_1K-PNG_Color.png-f260861ce7bb69a0d11de2ae7804d3f2.etc2.ctex"]
 
 [params]
 

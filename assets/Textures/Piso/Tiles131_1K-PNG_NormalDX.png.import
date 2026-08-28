@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dxfuvcnhaojlf"
 path.s3tc="res://.godot/imported/Tiles131_1K-PNG_NormalDX.png-c761eb7f6db794e4f8a824f01d98ac38.s3tc.ctex"
+path.etc2="res://.godot/imported/Tiles131_1K-PNG_NormalDX.png-c761eb7f6db794e4f8a824f01d98ac38.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Piso/Tiles131_1K-PNG_NormalDX.png"
-dest_files=["res://.godot/imported/Tiles131_1K-PNG_NormalDX.png-c761eb7f6db794e4f8a824f01d98ac38.s3tc.ctex"]
+dest_files=["res://.godot/imported/Tiles131_1K-PNG_NormalDX.png-c761eb7f6db794e4f8a824f01d98ac38.s3tc.ctex", "res://.godot/imported/Tiles131_1K-PNG_NormalDX.png-c761eb7f6db794e4f8a824f01d98ac38.etc2.ctex"]
 
 [params]
 

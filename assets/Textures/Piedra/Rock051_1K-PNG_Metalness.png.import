@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://84f6pgq0b5wm"
 path.s3tc="res://.godot/imported/Rock051_1K-PNG_Metalness.png-d8c8158a8764f9cdd40c3f406ceaf15a.s3tc.ctex"
+path.etc2="res://.godot/imported/Rock051_1K-PNG_Metalness.png-d8c8158a8764f9cdd40c3f406ceaf15a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Piedra/Rock051_1K-PNG_Metalness.png"
-dest_files=["res://.godot/imported/Rock051_1K-PNG_Metalness.png-d8c8158a8764f9cdd40c3f406ceaf15a.s3tc.ctex"]
+dest_files=["res://.godot/imported/Rock051_1K-PNG_Metalness.png-d8c8158a8764f9cdd40c3f406ceaf15a.s3tc.ctex", "res://.godot/imported/Rock051_1K-PNG_Metalness.png-d8c8158a8764f9cdd40c3f406ceaf15a.etc2.ctex"]
 
 [params]
 

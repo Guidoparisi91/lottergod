@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://8hjmmf1k2mc7"
 path.s3tc="res://.godot/imported/tierra_normal.png-51b64fe0564aef8d70579c438779bde9.s3tc.ctex"
+path.etc2="res://.godot/imported/tierra_normal.png-51b64fe0564aef8d70579c438779bde9.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Tierra/tierra_normal.png"
-dest_files=["res://.godot/imported/tierra_normal.png-51b64fe0564aef8d70579c438779bde9.s3tc.ctex"]
+dest_files=["res://.godot/imported/tierra_normal.png-51b64fe0564aef8d70579c438779bde9.s3tc.ctex", "res://.godot/imported/tierra_normal.png-51b64fe0564aef8d70579c438779bde9.etc2.ctex"]
 
 [params]
 

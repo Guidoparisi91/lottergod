@@ -4,7 +4,7 @@
 > ni cuál es el final. Este documento existe para que el enfoque no se pierda
 > entre sesiones — ya se perdió dos veces.
 >
-> Última actualización: 2026-08-25
+> Última actualización: 2026-08-27
 
 ---
 
@@ -605,3 +605,623 @@ identidad. Si no, mejor saberlo antes de importar veinte monstruos.
 - ¿Qué pasa entre rondas? El draft de §8.3 o el robo de habilidades de §14.1
   encajan acá, pero no están decididos.
 - ¿La corrida tiene final, o se juega hasta morir?
+
+---
+
+## 15. Cierre del 2026-08-27 — la sesión y las habilidades
+
+### 15.1 Qué es una sesión — **[ABIERTO]**
+
+> Entrás a la arena. Subís de nivel matando. Tenés **3 vidas**. **Ganás si matás
+> al boss.**
+
+**Es una posibilidad, no una decisión.** Salió como respuesta tentativa de Guido
+—*"tal vez hasta que se muera X veces o hasta que maten al boss"*— y quedó
+anotado acá como `[DECIDIDO]` por error del PO. Corregido el 27/08. Sigue siendo
+la forma más concreta que apareció hasta ahora, pero **el eje 1 de §7 sigue
+abierto**.
+
+Lo que sí vale de esta forma, gane o no: la duración **no se mediría en minutos,
+se mediría contra el boss**, y el techo de nivel se tunearía contra el encuentro
+final en vez de contra un reloj.
+
+> **De qué depende esto.** §15.2 (*"lo que da poder se resetea"*) y §15.3 (puntos
+> de habilidad por partida) dan por sentado que existe **una corrida que termina**.
+> Si el envase termina siendo continuo en vez de por partidas, esas dos secciones
+> hay que reescribirlas, no solo retocarlas.
+>
+> El plan de producción de §15.7 **no** depende de esto: la R, el sonido, el
+> personaje 2 y los enemigos que telegrafían valen igual en cualquier envase.
+
+### 15.2 La regla de la progresión — **[DECIDIDO]**
+
+> **Lo que da poder se resetea. Lo que da variedad se acumula.**
+
+- **Rangos de habilidad = poder** → viven dentro de la partida y se van con ella.
+- **Personajes desbloqueados = variedad** → se guardan.
+
+Tres razones duras, no estéticas:
+
+1. La progresión permanente exige backend (§9, riesgo 2). Si el progreso vive en
+   el cliente, el primero con un editor de memoria queda arriba para siempre.
+2. En CrazyGames el jugador llega de una miniatura y sin cuenta. Un meta
+   permanente que da poder hace que **la primera partida sea la peor del juego**.
+   Con PvP encima, es letal.
+3. Desbloquear personajes **sí** se puede guardar local y gratis: si alguien lo
+   hackea, se auto-regala contenido y no le arruina la partida a nadie.
+
+Es la aplicación directa del `[DECIDIDO]` de §4: *"nunca los desbloqueos
+permanentes"*.
+
+**El lobby es selección de personaje, no gestión de build.** La meta permanente
+se rediscute cuando exista backend.
+
+### 15.3 El sistema de habilidades — **[TENDENCIA]**
+
+Cuatro slots: **Q, W, E, R**. La R es la ulti y se desbloquea a **nivel 6**
+(igual que LoL, y por el mismo motivo: es el mejor momento de la partida
+temprana, cuando aparece una herramienta que antes no existía).
+
+| | Rangos | Puntos para maxear |
+|---|---|---|
+| Q / W / E | 3 | 9 |
+| R | 2 | 2 |
+| **Total necesario** | | **11** |
+| **Disponibles a nivel 10** | | **10** |
+
+**El desfasaje de 1 punto es a propósito: nunca podés maxear todo.** En LoL a
+nivel 18 tenés todo y la decisión es solo el *orden*. Si el techo alcanza, no hay
+decisión, hay secuencia.
+
+**El rango no puede ser "+10 de daño"** (§4):
+- **Rango 1 → 2:** sube números. Es la recompensa de relleno, barata.
+- **Rango 3:** **muta la habilidad** — cambia qué hace, no cuánto hace.
+
+Ejemplos con lo que ya existe: E rango 3 pasa a 3 cargas *y* el dash deja fuego;
+Q rango 3 pega en cono en vez de a un solo objetivo. Una sola variante por
+habilidad: barato de construir, y es el momento de *"mirá lo que me salió"*.
+
+**Paso siguiente natural, no construir todavía:** que en rango 3 **elijas entre
+dos mutaciones**. Ahí el draft de §8.3 queda metido *adentro* del sistema en vez
+de pegado por afuera.
+
+**Nivel 10 es un número, no una estructura.** Lo caro es que exista un punto por
+nivel, que exista el rango 3 que muta y que la R llegue a nivel 6. Eso funciona
+igual con techo 10, 18 o 25. **Las estructuras se discuten, los números se
+prueban.**
+
+### 15.4 La R del Longsword — **[TENDENCIA]**
+
+El Longsword se queda como el bruiser instantáneo (nada que errar, a propósito),
+pero su ulti es el vehículo para construir el **cast time** sin convertirlo en
+caster:
+
+> **R — Ejecución.** Cast de ~0,6 s inmóvil y telegrafiado (esquivable,
+> interrumpible). Si conecta: daño masivo, y si el objetivo queda por debajo del
+> 25 % de HP, **lo ejecuta** y la R vuelve a estar lista.
+
+Se lee en tres segundos, encaja con el "compromiso al golpe" que ya es la firma
+del combate, castiga la avaricia, y **obliga a construir barra de casteo,
+interrupción y telegrafiado** — la mitad de la Fase 1. El skillshot puro queda
+para el personaje 2, que es donde corresponde.
+
+### 15.5 Loot: dos cosas que parecen una — **[DECIDIDO]**
+
+- **Loot que cambia lo que podés hacer** — es *data*, no arte. Barato. Cae
+  durante la corrida y se va con la corrida (§15.2).
+- **Loot que cambia cómo te ves** — es *equipo modular*: cuerpo partido en piezas
+  intercambiables, todas riggeadas al mismo esqueleto, y cada variante suma malla
+  y texturas contra **50 MB**. Es un proyecto en sí mismo. **Estacionado.**
+
+**El atajo:** cambiar **solo el arma**. Es una malla suelta pegada a un hueso de
+la mano — un punto de anclaje, no un sistema. Da el 80 % de la sensación de
+"conseguí algo" al 5 % del costo.
+
+### 15.6 La lista de lo que NO estamos haciendo
+
+El *"faltan demasiadas cosas"* no viene de la cantidad de trabajo: viene de que
+**la lista no tiene borde**. Nada de acá está cancelado; está **estacionado**.
+
+| Estacionado | Motivo | Vuelve cuando |
+|---|---|---|
+| Equipo modular / cambiar el look | Carísimo, y pega contra los 50 MB | Haya jugadores reales |
+| Progresión permanente entre partidas | Exige backend y plata | Haya backend |
+| Idle + fantasmas (§9) | Depende de lo anterior | Ídem |
+| Robar habilidades (§14.1) | **[DESCARTADO]** por Guido: el goblin no tiene nada distintivo que robar | — |
+| Terrain3D | No exporta a web | Nunca |
+| Personajes 3, 4, 5… | El 2 todavía no existe | El 2 esté andando |
+| Más mapa | No sabemos para qué formato | Fase 3 |
+
+### 15.7 El plan de producción — cuatro fases
+
+Ninguna depende de decisiones pendientes.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| **0** | Gamefeel del jugador + sonido | Feedback **hecho**, falta sonido |
+| **1** | Sistema de habilidades: skillshot, cast time, indicadores, R | Siguiente |
+| **2** | Personaje 2, **opuesto** al actual: caster a distancia, frágil | — |
+| **3** | Enemigos que telegrafíen y obliguen a esquivar | — |
+| **4** | Loot (solo el que cambia lo que hacés) | — |
+
+**Fase 0, detalle.** Hallazgo verificado el 27/08: **`CombatFeedback` no se usaba
+ni una vez en `longsword.gd`** — estaba enchufado solo del lado de los enemigos.
+El PvE tenía todo el feedback y **el PvP estaba mudo**. Hecho:
+
+- `CombatFeedback.screen_flash()` — viñeta roja difuminada en los bordes, con
+  shader. Vive en el autoload y no en el HUD: es feedback de combate, no
+  información, y tiene que andar con cualquier personaje.
+- `CombatFeedback.camera_shake()` → `iso_camera.shake()`. La vertical va a la
+  mitad: en isométrica el temblor en Y se lee como que salta el piso.
+- Flash, número de daño y estallido de muerte en el jugador, **replicados a todos
+  los peers**. Con enemigos cada cliente genera el suyo; con jugadores no se
+  puede, porque el daño viaja por `rpc_id(dueño)` y **la víctima es el único peer
+  que se entera** —y el único que conoce el daño real con defensa y escudo ya
+  aplicados—, así que es ella la que dispara y replica.
+
+Ajustado al probarlo: el shake bajó a menos de un tercio y ahora **escala por
+zoom** (estaba en unidades de mundo, así que quedaba bien a una distancia y mal a
+todas las demás). La franja roja se angostó. El detalle técnico está en `CLAUDE.md`.
+
+Pendiente de Fase 0: **sonido** (hoy es cero). Packs libres: Kenney *Impact
+Sounds* y *RPG Audio* (CC0) para golpe, impacto y muerte; Incompetech o FreePD
+para la música. Van a `assets/audio/`.
+
+**De yapa, no estaba planeado:** `ui/lobby/lobby.gd` acepta `--auto-host` /
+`--auto-join` para levantar dos partidas en la misma máquina con F5 y cero clicks.
+Ver `CLAUDE.md → Multijugador`. Acorta el ciclo de prueba de PvP a segundos.
+
+### 15.8 El portón web — **ABIERTO, con número** (27/08)
+
+Se probó. **Hay build web y funciona.** Los detalles técnicos están en `CLAUDE.md`;
+lo que importa para el producto:
+
+| Límite CrazyGames | Nosotros | |
+|---|---|---|
+| Menos de 1.500 archivos | 9 | ✅ |
+| 250 MB totales | 92 MB transferidos | ✅ |
+| **50 MB de carga inicial** | **92 MB** | ❌ 1,85× |
+
+**El riesgo técnico grande de §5 ya no es una incógnita, es una cuenta.** Godot exporta,
+el motor pesa 10 MB comprimido, y todo lo que sobra son texturas. Se limpiaron 300 MB
+de cosas que **no eran contenido del juego** (el zip del pack, Terrain3D, la demo, un
+FBX del goblin sin usar) y se capó la resolución de 75 texturas. Falta un factor ~2,
+y hay dos caminos claros: bajar el pueblo a 512, o partir el `.pck` y cargar en
+diferido. Ninguno de los dos pone en riesgo el plan.
+
+**Lo que sigue sin resolverse es el multijugador en web:** ENet no corre en navegador
+y un browser no puede aceptar conexiones entrantes, así que **ningún jugador puede ser
+el host**. Ver §15.9.
+
+### 15.9 Matchmaking — **[TENDENCIA]**
+
+Propuesta de Guido: **partidas que arrancan cada 15 segundos.** Los que están en cola
+entran a esa partida; lo que falta lo llenan **bots que simulan humanos**. Empezar de
+2 jugadores, después 4.
+
+Es el patrón `.io` y ya estaba anotado en §14.2 (*"los .io resuelven eso con bots"*).
+
+**El costo escondido:** ese modelo pide un **servidor dedicado** — un build headless
+de Godot en un VPS hablando WebSocket, porque el host no puede ser un navegador. Son
+5-10 USD por mes, entran en los 500, pero es mudanza real: la lógica host-autoritativa
+tiene que pasar de *"la máquina de un jugador"* a *"una máquina donde no juega nadie"*.
+
+**La propiedad buena, que es la razón para bancar el diseño:** si los bots llenan la
+partida igual, **la versión 1 no necesita servidor en absoluto.** Un jugador contra
+bots es lo que va a ver el 100% de la gente el día uno de todas formas. Cero
+infraestructura, cero latencia, y el *Basic Launch* de CrazyGames mide dos semanas de
+retención real gratis. Si nadie vuelve, nos ahorramos el servidor entero; si vuelven,
+le enchufamos jugadores reales a un diseño **que ya asumía bots**.
+
+Un ajuste a la cadencia: los 15 segundos solo importan cuando hay cola. Con población
+cero son invisibles. Mejor: *la partida arranca ya y los bots llenan; cuando haya gente
+real, la ventana de 15 s los agrupa.* Mismo sistema, funciona desde el día uno.
+
+### 15.10 Multijugador en web — **NO estamos obligados al single-player** (27/08)
+
+Verificado en la documentación, no de memoria. **CrazyGames soporta multijugador como
+categoría de primera**: tiene una página entera de *requisitos para juegos
+multijugador*, botón de invitar en su propia UI, y un SDK con `inviteLink()`,
+`getInviteParam()`, `updateRoom()` y un flag `isInstantMultiplayer` que mete al jugador
+directo a una partida joinable.
+
+**Y anticipan exactamente la idea de Guido.** Cita textual de su documentación:
+
+> *"The room doesn't have to exist on the server, you could also consider a room a
+> special case when some players are connected to each other directly, via WebRTC."*
+
+#### El camino técnico: WebRTC
+
+`WebRTCPeerConnection`, `WebRTCDataChannel` y `WebRTCMultiplayerPeer` **vienen
+incluidos en el export HTML5 de Godot**, sin GDExtension — dato clave, porque en web
+los GDExtension **no funcionan** (nuestro propio build lo dice: *"single-threaded, no
+GDExtension support"*). Dos navegadores **sí pueden hablarse directo entre ellos**.
+
+Eso es literalmente el *"algo local entre ellos automáticamente"*: después del apretón
+de manos, los paquetes van **jugador ↔ jugador**, no por un servidor nuestro.
+
+**Lo único que hace falta es un servidor de señalización (*signaling*)**: un WebSocket
+mínimo cuyo único trabajo es presentar a los dos navegadores e intercambiar SDP e ICE.
+Mueve unos pocos KB por partida, no el tráfico del juego. Entra en un plan gratuito.
+Godot trae el demo oficial: `networking/webrtc_signaling`.
+
+**Lo que sí cuesta, dicho sin maquillar:**
+- **STUN** para descubrir la IP pública: gratis, hay servidores públicos.
+- **TURN** para cuando el NAT no se puede atravesar (redes restrictivas, NAT
+  simétrico). Ese **sí relaya el tráfico**, así que consume ancho de banda y cuesta.
+  Afecta a una fracción de las conexiones, no a todas. Es el único costo variable real.
+
+**[DESCARTADO] Epic (EOS).** Su P2P y su relay son **solo SDK nativo**; el SDK web de
+Epic es de login y compras, no de red. No corre en navegador. El equivalente gratuito
+para web es WebRTC + STUN público.
+
+**CrazyGames no hostea servidores de juego.** No lo ofrecen. Con WebRTC eso deja de
+importar, porque lo único que hosteamos es el signaling.
+
+#### Lo mejor: no se tira el netcode que ya validamos
+
+La API multijugador de Godot es **agnóstica del transporte**. Se cambia
+`ENetMultiplayerPeer` por `WebRTCMultiplayerPeer` y **todo el código de RPC queda
+igual** — el sistema host-autoritativo de enemigos, `_take_damage_rpc.rpc_id(1, …)`,
+la sincronización a 20 Hz, todo. Un jugador hace de host, como ahora.
+
+Costo del modelo: ventaja de host por latencia, y si el host se va se cae la partida.
+Para 2-4 jugadores en una arena cooperativa es aceptable.
+
+#### Qué significa para el concepto
+
+**El concepto no está obligado a colapsar en un clon de Vampire Survivors.** La arena
+de §15.1 —3 vidas, boss— funciona con 1 y funciona con 4, que es justo el principio
+`[DECIDIDO]` de §4.
+
+**El orden que propongo no cambia:** v1 solo contra bots (se publica rápido, se mide
+gratis con el *Basic Launch*), pero **diseñando la partida con lugares que un jugador
+real pueda ocupar**. Los bots no son un parche: son el relleno permanente, y el
+multijugador se enchufa encima cuando haya a quién enchufarle.
+
+### 15.11 UI y arte de interfaz — factibilidad (27/08)
+
+Pregunta de Guido: ¿puede Claude buscar referencias y rehacer la UI solo?
+
+**Sí, y bastante bien.** En Godot un `Theme` es un **recurso de texto** (`.tres`):
+colores, tipografías, bordes y estados se escriben desde afuera sin tocar el editor. Y
+desde que existe el build web hay **circuito de verificación visual**: exportar, abrir
+en Chrome, capturar, iterar — sin depender de que Guido mire cada paso.
+
+**Los límites, sin maquillar:**
+1. **El gusto es de Guido, no de Claude.** Con una referencia visual se copia con
+   fidelidad; sin referencia, se adivina.
+2. **Licencias: el riesgo real.** Casi toda la UI linda de GitHub y ArtStation **no es
+   libre para uso comercial**, y hay gente que sube packs que no le pertenecen con
+   licencias inventadas. **Regla: CC0 y de fuentes conocidas, o nada.**
+3. **Las capturas son JPEG a resolución media.** Sirven para layout, color y jerarquía;
+   no para juzgar hinting de fuente, bordes de 1px o degradados sutiles.
+4. **Los 50 MB.** Una UI con atlas de texturas suma peso; una hecha con `StyleBoxFlat`
+   —bordes, radios y colores por código— **pesa casi cero**. Hoy eso no es un detalle.
+
+**La advertencia de PO: la UI es el mejor lugar del mundo para procrastinar.** Se ve,
+da satisfacción inmediata, no se termina nunca y no tiene punto natural de corte. Y el
+HUD no es lo feo: lo que decide si alguien se queda es la vista del juego.
+
+**El matiz a favor de adelantarla:** en un portal donde se elige por miniatura, **los
+primeros diez segundos son la superficie de conversión** — carga, título, el botón que
+apretás. Eso no es el HUD, es la entrada. Y si se van a grabar clips o devlogs, la UI
+es lo que hace que las capturas se vean intencionales en vez de placeholder.
+
+**El cómo, cuando toque:** no "rediseñar el HUD" sino **un `Theme` global, procedural,
+de un solo archivo**, que hereden lobby, HUD, selección de personaje y fin de partida.
+Misma jugada que la gramática de habilidades: construir el sistema una vez para que lo
+que venga después salga barato.
+
+**Tiempo recomendado:** después de la R y el sonido. Buscar referencias no cuesta nada
+y no compromete a nada, así que eso se puede hacer cuando sea.
+
+### 15.11b El duelo con boss — **[ABIERTO]** (27/08)
+
+> **Todo 15.11b y 15.11c son IDEAS, no decisiones.** Están escritas con detalle porque
+> el detalle es lo que se pierde entre sesiones, no porque estén cerradas. El loop
+> todavía se está pensando. Nos estamos acercando, que no es lo mismo que llegar.
+
+> **1v1. Gana el que mate al boss, o el que mate al otro jugador 3 veces.**
+
+Propuesta de Guido. **Es una propuesta, no una decisión** — está acá para no perderse,
+igual que §15.1.
+
+**Por qué es la más fuerte que apareció:**
+- **Es una carrera.** Dos condiciones de victoria en la misma partida = cada segundo
+  estás eligiendo entre empujar al boss o ir a cazarlo. Bucle de decisión real, y la
+  tensión la genera el reloj compartido, no la población.
+- **El PvP queda como capa, no como core** (§4): podés ganar sin pelearte nunca, pero
+  ignorarlo es peligroso.
+- **Se explica en una frase y se ve en un GIF** — dos tipos, un boss, una carrera. Es
+  la respuesta que §14 venía pidiendo.
+- **Cierra el eje 1 de §7**: la sesión es finita y tiene condición de victoria.
+- **1v1 es el multijugador más barato posible**: una conexión, cero matchmaking, y el
+  bot necesario es **uno solo**.
+
+**Los tres lugares donde se rompe:**
+
+1. **El snowball, y es el grave.** La primera muerte da nivel al que mató y no al
+   muerto, que ahora mata más fácil: **el primer kill decide la partida.** Es la
+   espiral clásica del 1v1.
+
+   > **Pero el propio diseño trae la solución: si vas perdiendo en kills, el boss es
+   > tu comeback.** La condición que estás perdiendo te empuja hacia la otra, así que
+   > **las dos condiciones se balancean entre sí**. No es un parche, es una propiedad
+   > del diseño — y es la razón principal para bancarlo.
+
+2. **Si una condición domina, la otra es decorado.** Kills muy fáciles = deathmatch
+   con escenografía; boss muy fácil = carrera PvE donde el otro da igual. La perilla
+   que las mantiene vivas: **pegarle al boss tiene que dejarte expuesto.** Si se puede
+   farmear tranquilo, el PvP desaparece.
+
+3. **El spawn camp.** Con 3 kills para ganar, el que va arriba cierra la partida
+   campeando el respawn. Hace falta protección al reaparecer, sí o sí.
+
+**Consecuencia:** el bot no es un goblin, es un oponente con skills, cooldowns y dash.
+Eso es exactamente el **fantasma de §9** — no una IA nueva, sino `longsword.gd` con una
+fuente de input falsa enchufada.
+
+#### Cómo se prueba, y esto es lo importante
+
+**NO hace falta WebRTC para probar el concepto.** Se prueba en LAN con la notebook, que
+ya funciona. Lo que hace falta es:
+
+- un contador de kills entre los dos jugadores,
+- la condición de victoria (3 kills o boss muerto),
+- una pantalla de "ganó X".
+
+Es una tarde, y contesta la única pregunta que importa: **¿la carrera se siente?** Si
+sí, ahí vale la pena el servidor de señalización. Si no, nos lo ahorramos entero.
+
+**El "3" es un número; la carrera de dos condiciones es la estructura.** No gastar un
+minuto discutiendo si son 3 o 5 (ver §15.3).
+
+### 15.11c La economía de tiempo — **[ABIERTO]** (27/08)
+
+Guido: *"los enemigos pequeños deberían seguir estando, entonces farmeás y subís de
+nivel, y decidís si vas a pelearle o a pegarle al boss. Es un loop medio extraño."*
+
+**No es extraño: es una línea de LoL.** Farmeás minions para subir de nivel y en todo
+momento elegís entre pelear al otro o empujar hacia el objetivo grande. League
+comprimido a una línea y un objetivo. Derivado desde cero, y encima con quince años de
+ajuste fino público para copiar.
+
+#### El triángulo
+
+| | Riesgo | Velocidad | ¿Gana? |
+|---|---|---|---|
+| **Bichos chicos** | Bajo | Lento | **No** |
+| **El otro jugador** | Alto | Rápido | Sí |
+| **El boss** | Alto | Lento | Sí |
+
+**La regla que lo mantiene honesto: farmear es lo único que NO gana.** Solo te hace
+mejor en las dos cosas que sí. Tiene que ser **necesario temprano** (a nivel 1 no matás
+ni al boss ni al otro) y **nunca suficiente** (podés farmear toda la partida y perder).
+
+Si farmear fuera gratis, lo óptimo sería farmear para siempre. Lo que rompe eso en un
+MOBA es que **el mapa es compartido y el farmeo del rival es presión visible**.
+
+#### Dónde viven los bichos — acá se decide si el loop funciona
+
+- **Repartidos y compartidos:** si él farmea ese nido, yo no. El conflicto aparece
+  **solo**, sin regla que lo fuerce.
+- **Uno por jugador cerca de su lado:** simétrico y justo, pero farmean en paralelo y
+  no pasa nada hasta que alguien decide irse. Mucho más tibio.
+
+**Propuesta: mezcla.** Goteo seguro cerca de cada spawn + **centro rico y disputado**.
+Es lanes + jungla. La decisión deja de ser "farmeo o no" y pasa a ser *"¿me conformo
+con lo seguro o voy a pelear por lo bueno?"*.
+
+#### El boss va en el centro disputado
+
+Esto resuelve **geométricamente** el problema 2 de §15.11b (*"pegarle al boss tiene que
+dejarte expuesto"*). Con el boss en el medio no hace falta ninguna regla: ir por él
+**es** meterse en territorio disputado, de espaldas, ocupado y con la vida bajando. Se
+entiende mirando el mapa, sin explicar nada.
+
+**Y le da al pueblo un motivo para tener la forma que tiene.** Hasta ahora el mapa era
+decorado —por eso está congelado en §15.6—. Con esto pasa a ser mecánica: zonas seguras
+en los extremos, centro rico y peligroso, boss en el medio, y las esquinas y líneas de
+visión pasan a importar. **Esto es lo que contesta qué es la Fase 3.**
+
+#### El riesgo real
+
+**Tres actividades en 8 minutos es mucho.** Un MOBA tiene 35 minutos para que respire.
+El peligro es hacer las tres a medias y que ninguna se sienta.
+
+**La perilla: el farmeo tiene que ser rápido.** Segundos por nido, no minutos. Ritmo de
+Vampire Survivors, no de LoL. Si limpiar un nido lleva un minuto, el juego es una tarea.
+
+#### Lo que ya está conectado
+
+Tres piezas que encajan: **la carrera de dos condiciones** (§15.11b), **la economía de
+tiempo con tres destinos** (acá), y **un mapa que hace de árbitro**. Alcanza para
+describir el juego sin pedir disculpas — aunque el loop siga en discusión.
+
+### 15.11d El segundo eje de progresión — **[ABIERTO]** (27/08)
+
+Guido: *"en LoL comprás items, en Helbreath farmeás ropa y armas. En LotterGod solo
+tenemos habilidades. Hay que pensar qué otra vuelta de progreso le damos."*
+
+#### El agujero concreto que hay detrás
+
+**Con solo habilidades, el farmeo se muere a mitad de partida.** Techo nivel 10 (§15.3),
+alcanzado tal vez en el minuto 5 de una partida de 8: a partir de ahí matar goblins **no
+da nada**. Un tercio de la partida con una de las tres patas del triángulo (§15.11c)
+muerta. Eso solo ya justifica un segundo eje.
+
+#### Qué hacen los items en realidad
+
+No hay que copiar el sistema, hay que cubrir los trabajos:
+
+1. **Convierten farmeo en poder** — sin eso, farmear no tiene salida.
+2. **Segundo eje de decisión** — el nivel es forzado, el item es elegido.
+3. **Economía** con tensión de gastar o guardar.
+4. **Palanca de contrajuego** — reaccionar a lo que hizo el otro.
+5. **Power spikes** — *"ahora soy fuerte, ahora es mi ventana"*.
+
+Para 8 minutos valen el **1**, el **4** y sobre todo el **5**. La **economía (3) queda
+descartada**: pide un ciclo de volver a la base, y **no tenemos base**.
+
+#### La trampa a esquivar
+
+**Los rangos que mutan habilidades (§15.3) y los items que modifican habilidades son el
+mismo sistema con dos sombreros.** Construir los dos sin distinguirlos = complejidad sin
+profundidad. La separación propuesta:
+
+> **Las habilidades son la build que elegiste. Los drops son la ventana en la que estás.**
+> Planificado y tuyo, contra circunstancial y disputado.
+
+#### La propuesta
+
+**Los enemigos y el boss sueltan el objeto en el piso. Lo pisás y lo tenés. Sin tienda,
+sin inventario, sin oro.**
+
+- **Cero UI**, que es lo caro y lo estacionado (§15.11).
+- **Se lee en tres segundos**: cae, brilla, lo pisás, sos más fuerte.
+- **La recompensa está en el mundo, así que es disputable** — alimenta directo el mapa
+  como árbitro (§15.11c). Cada drop es un punto de conflicto que aparece solo.
+- **El spike es el propio pickup.** No hay que inventarlo.
+
+**Pocos y temporales.** Tres o cuatro por partida, cada uno un evento. Y no
+estadísticas permanentes sino **ventanas con reloj** — el boss suelta algo que dura 60
+segundos. Eso lo convierte en **objeto de tempo**: una ventaja con fecha de vencimiento
+**obliga a actuar**, que es lo que una partida corta necesita. Un item permanente te
+deja sentarte a esperar; uno temporal te empuja.
+
+**Lo de Helbreath** —equipo que farmeás y conservás entre partidas— sigue siendo el eje
+largo correcto, pero es progresión permanente y **exige backend** (§15.2). Queda donde
+está.
+
+#### La advertencia
+
+**Una partida de 8 minutos puede tener lugar para UN solo eje de progresión bien hecho.**
+LoL tiene 35 minutos y le entran los dos.
+
+**No construirlo todavía.** Primero las habilidades (Fase 1), jugar, y ver si la partida
+se siente flaca. Si a los 6 minutos no hay nada que perseguir, los drops entran con un
+problema real que resolver en vez de por analogía con LoL. **Es Fase 4.**
+
+### 15.12 Próxima sesión
+
+1. **La R del Longsword** (§15.4). Es la Fase 1 entrando por la puerta que menos
+   riesgo tiene: construye cast time, interrupción y telegrafiado sobre el
+   personaje que ya existe y ya se siente bien.
+2. **Sonido**, para cerrar Fase 0 y ver cuánto levanta el conjunto.
+3. **El bot que reemplaza al humano.**
+
+#### Sobre el bot — pedido de Guido, con motivo de peso
+
+*"No tengo con quién testear."* **El bot es herramienta antes que contenido.** Hoy
+probar el duelo exige dos máquinas y jugar los dos lados mal; con bot, el loop se
+prueba solo, en una ventana, las veces que haga falta. Acelera todo lo demás.
+
+Paga cuatro veces: **compañero de pruebas**, **relleno cuando no hay matchmaking**,
+**modo solo deliberado**, y es la misma tecnología que el fantasma de §9.
+
+**Alcance de la v1 — el bot NO tiene que pelear bien, tiene que existir en el reloj.**
+Para saber si la carrera de §15.11b se siente, alcanza con que farmee, suba de nivel y
+empuje al boss. Lo que hay que medir es presión de **tempo**, no habilidad de duelo. Un
+bot que pelea mal pero compite por el objetivo da la respuesta; uno que duelea perfecto
+pero ignora el boss, no.
+
+**El orden R → bot es el correcto, no arbitrario.** El bot no es una IA nueva sino
+`longsword.gd` con una fuente de input falsa (§9), así que **hereda gratis todo lo que
+se le construya al personaje**. Con la R hecha primero, el bot la tiene el mismo día.
+
+> **Dependencia a resolver antes: la navmesh del pueblo NO está horneada.**
+> `longsword.gd` tiene el `NavigationAgent3D` puesto pero esperando. Un humano esquiva
+> las casas a ojo; **un bot sin navmesh se clava contra la primera pared.** Es una
+> tarea chica, pero es un bloqueante real del bot.
+
+**Lo que sigue sin definirse: de qué va el juego.** §15.1 puso sobre la mesa una
+forma posible de sesión (arena, 3 vidas, boss) pero **no la cerró**, y los cuatro
+ejes de §7 siguen abiertos, y con ellos la respuesta a *"¿cuál es nuestro GIF de tres
+segundos?"* (§14). La apuesta de estas fases es que **el concepto se cierre desde
+abajo** —por acumulación de decisiones jugables— y no en otra charla de género.
+Si después de la R y el personaje 2 el juego sigue sin tener razón de ser, ahí sí
+el problema es de concepto y no de contenido.
+
+//agregado 2.54 am 27.8 como nota:
+Si no quiere pelear:
+→ farmea.
+
+Si quiere hacerse fuerte:
+→ busca mobs.
+
+Si ve al rival débil:
+→ lo persigue.
+
+Si aparece una oportunidad:
+→ va por el boss.
+
+Si está perdiendo:
+→ puede intentar escapar y farmear para volver.
+
+Eso es mucho mejor que diseñar un PvP donde básicamente “encontrás al rival y peleás”.
+
+Yo prestaría mucha atención a una sola cosa
+
+El loot debería crear builds temporales.
+
+No necesariamente:
+
+Espada +1, espada +2, espada +3.
+
+Sino cosas que hagan que esa partida se sienta distinta.
+
+Por ejemplo, el mago podría encontrar:
+
+🔥 Proyectil que atraviesa enemigos
+⚡ Skillshot que rebota
+❄️ Proyectil que ralentiza
+💥 +1 carga de una habilidad
+🌀 Dash adicional
+🔮 reducción de cooldown
+☠️ daño aumentado contra enemigos con poca vida
+
+Y el guerrero podría terminar una partida siendo:
+
+tanque + robo de vida
+
+mientras que otra partida sea:
+
+glass cannon + movilidad
+
+Y todo eso desaparece cuando termina la partida.
+
+Eso además te evita tener que construir inicialmente un sistema RPG permanente gigantesco.
+
+Y esto tiene una consecuencia MUY buena para CrazyGames
+
+El jugador puede pensar:
+
+"Esta partida me salió una build de mierda."
+
+Otra partida.
+
+"A ver qué loot me toca ahora."
+
+Otra partida.
+
+"Ahora tengo una build increíble, voy a buscar al mago."
+
+Otra partida.
+
+Ese tipo de loop puede generar muchas partidas por jugador.
+
+Así que sí: yo no agregaría contenido todavía por agregar contenido. Primero terminaría de definir exactamente:
+
+Qué pueden dropear los mobs.
+Cómo se recoge el loot.
+Cuánto dura.
+Cuántos objetos puede llevar un jugador.
+Cómo se combinan.
+Qué tan fuerte puede llegar a ser una build.
+Cómo el loot modifica el PvP.
+
+Cuando tengas esas reglas, probablemente tengas definido el 70% de lo que hace que LooterGod sea LooterGod, aunque inicialmente solo tenga Guerrero + Mago.
+
+Y sí: el concepto ya tiene una dirección bastante clara. Lo que te falta ahora no es inventar más sistemas, sino terminar de encontrar el sistema de loot que haga que quieras jugar “una partida más”.
+

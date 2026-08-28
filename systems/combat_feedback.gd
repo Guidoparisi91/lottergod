@@ -27,9 +27,28 @@ const HITSTOP_MAX_MULT := 1.5
 # --- Números de daño ---
 const DMG_RISE_TIME := 0.85
 
+# --- Viñeta de daño en pantalla ---
+## Cuánto tarda en apagarse. Corta: es un latigazo, no un estado.
+const VIGNETTE_TIME := 0.55
+## Opacidad máxima en el borde. Por encima de ~0.9 tapa el juego.
+const VIGNETTE_MAX  := 0.85
+const VIGNETTE_SHADER := """
+shader_type canvas_item;
+uniform float intensity : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 tint : source_color = vec3(0.90, 0.05, 0.05);
+void fragment() {
+	// 0 en el centro, 1 en los bordes: el centro nunca se tiñe para no
+	// taparte al personaje justo cuando más necesitas verlo.
+	float v = smoothstep(0.30, 1.0, length(UV - vec2(0.5)) * 1.70);
+	COLOR = vec4(tint, v * intensity);
+}
+"""
+
 var _hitstop_until: float = 0.0
 var _hitstop_on:    bool  = false
 
+var _vignette: ColorRect = null
+var _vignette_tween: Tween = null
 # meshes -> material_overlay que tenían antes del flash (para restaurar el tinte)
 var _flash_restore: Dictionary = {}
 
@@ -197,3 +216,63 @@ func death_burst(world_pos: Vector3, size: float = 1.0, color: Color = Color(0.8
 func _host() -> Node:
 	var scene := get_tree().current_scene
 	return scene if scene != null else get_tree().root
+
+
+# ---------------------------------------------------------------- pantalla
+
+## Viñeta roja difuminada en los bordes: "te están pegando a VOS".
+##
+## Va acá y no en el HUD a propósito: es feedback de combate, no información.
+## El HUD te dice cuánta vida te queda; esto te dice que algo te acaba de pasar,
+## y tiene que funcionar igual con cualquier personaje y con el HUD apagado.
+func screen_flash(intensity: float = 1.0) -> void:
+	var rect := _get_vignette()
+	if rect == null:
+		return
+	var mat := rect.material as ShaderMaterial
+	var peak := clampf(intensity, 0.0, 1.0) * VIGNETTE_MAX
+
+	# Un golpe nuevo PISA al anterior en vez de encadenarse. Si se acumularan,
+	# una ráfaga de golpes flojos te dejaría la pantalla roja varios segundos.
+	if _vignette_tween != null and _vignette_tween.is_valid():
+		_vignette_tween.kill()
+	mat.set_shader_parameter("intensity", peak)
+
+	_vignette_tween = create_tween()
+	_vignette_tween.set_ignore_time_scale(true)
+	_vignette_tween.tween_method(
+		func(v: float) -> void: mat.set_shader_parameter("intensity", v),
+		peak, 0.0, VIGNETTE_TIME
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+## Sacudón de cámara. Le pide el shake a la cámara activa; si la cámara de turno
+## no lo implementa, no pasa nada. Así esto no ata el feedback a `iso_camera`.
+func camera_shake(amount: float = 0.25, duration: float = 0.18) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(amount, duration)
+
+
+## La viñeta cuelga del autoload, no de la escena: así sobrevive a un cambio de
+## mapa y no hay que acordarse de instanciarla en cada escena nueva.
+func _get_vignette() -> ColorRect:
+	if _vignette != null and is_instance_valid(_vignette):
+		return _vignette
+
+	var layer := CanvasLayer.new()
+	layer.layer = 100  # por encima del HUD
+	add_child(layer)
+
+	_vignette = ColorRect.new()
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	var sh  := Shader.new()
+	sh.code    = VIGNETTE_SHADER
+	mat.shader = sh
+	mat.set_shader_parameter("intensity", 0.0)
+	_vignette.material = mat
+	layer.add_child(_vignette)
+	# _and_offsets_: solo set_anchors_preset() deja el rect en 0x0 y no se ve nada.
+	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return _vignette

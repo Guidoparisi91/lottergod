@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2hnlg6lgprty"
 path.s3tc="res://.godot/imported/adoquin_piedra.png-8ae5cdcb2bfb7701ffcf8f92f1023bf8.s3tc.ctex"
+path.etc2="res://.godot/imported/adoquin_piedra.png-8ae5cdcb2bfb7701ffcf8f92f1023bf8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Piso/adoquin_piedra.png"
-dest_files=["res://.godot/imported/adoquin_piedra.png-8ae5cdcb2bfb7701ffcf8f92f1023bf8.s3tc.ctex"]
+dest_files=["res://.godot/imported/adoquin_piedra.png-8ae5cdcb2bfb7701ffcf8f92f1023bf8.s3tc.ctex", "res://.godot/imported/adoquin_piedra.png-8ae5cdcb2bfb7701ffcf8f92f1023bf8.etc2.ctex"]
 
 [params]
 

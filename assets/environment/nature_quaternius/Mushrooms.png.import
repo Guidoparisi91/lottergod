@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dk3bsxjabitui"
 path.s3tc="res://.godot/imported/Mushrooms.png-81392dd0a08a20f9c8e4cc853008b989.s3tc.ctex"
+path.etc2="res://.godot/imported/Mushrooms.png-81392dd0a08a20f9c8e4cc853008b989.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/environment/nature_quaternius/Mushrooms.png"
-dest_files=["res://.godot/imported/Mushrooms.png-81392dd0a08a20f9c8e4cc853008b989.s3tc.ctex"]
+dest_files=["res://.godot/imported/Mushrooms.png-81392dd0a08a20f9c8e4cc853008b989.s3tc.ctex", "res://.godot/imported/Mushrooms.png-81392dd0a08a20f9c8e4cc853008b989.etc2.ctex"]
 
 [params]
 

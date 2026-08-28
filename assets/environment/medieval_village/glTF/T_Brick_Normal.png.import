@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4uv4s2k0vyux"
 path.s3tc="res://.godot/imported/T_Brick_Normal.png-521616ae6e30ac30c3434a1d86f83ca2.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Brick_Normal.png-521616ae6e30ac30c3434a1d86f83ca2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/environment/medieval_village/glTF/T_Brick_Normal.png"
-dest_files=["res://.godot/imported/T_Brick_Normal.png-521616ae6e30ac30c3434a1d86f83ca2.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Brick_Normal.png-521616ae6e30ac30c3434a1d86f83ca2.s3tc.ctex", "res://.godot/imported/T_Brick_Normal.png-521616ae6e30ac30c3434a1d86f83ca2.etc2.ctex"]
 
 [params]
 
@@ -37,5 +38,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=1024
 detect_3d/compress_to=0

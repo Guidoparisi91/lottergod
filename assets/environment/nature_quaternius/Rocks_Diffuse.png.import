@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cghiegyvvhica"
 path.s3tc="res://.godot/imported/Rocks_Diffuse.png-5921f2c3ef2fe6f2b5674c8481ea0deb.s3tc.ctex"
+path.etc2="res://.godot/imported/Rocks_Diffuse.png-5921f2c3ef2fe6f2b5674c8481ea0deb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={}
@@ -13,7 +14,7 @@ generator_parameters={}
 [deps]
 
 source_file="res://assets/environment/nature_quaternius/Rocks_Diffuse.png"
-dest_files=["res://.godot/imported/Rocks_Diffuse.png-5921f2c3ef2fe6f2b5674c8481ea0deb.s3tc.ctex"]
+dest_files=["res://.godot/imported/Rocks_Diffuse.png-5921f2c3ef2fe6f2b5674c8481ea0deb.s3tc.ctex", "res://.godot/imported/Rocks_Diffuse.png-5921f2c3ef2fe6f2b5674c8481ea0deb.etc2.ctex"]
 
 [params]
 

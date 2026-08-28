@@ -305,10 +305,40 @@ constante `SPAWN_ORIGIN`. Ponerlo con `Y = 2` para que el personaje apoye bien.
 
 ## CombatFeedback (`systems/combat_feedback.gd`, autoload)
 
-Flash de golpe, números de daño flotantes, hitstop y estallido de muerte. Puramente
-visual, **sin sincronización de red**: cada cliente lo genera del daño que ya recibió.
-Se dispara **antes** del redirect al host, para que quien pega vea el golpe sin
-esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
+Flash de golpe, números de daño flotantes, hitstop, estallido de muerte, **viñeta
+roja en pantalla** y **shake de cámara**. Puramente visual. Los enemigos lo modulan
+con `feedback_scale`.
+
+**Con enemigos, sin red:** todos los peers ven el golpe, así que cada cliente genera
+el suyo del daño que ya recibió. Se dispara **antes** del redirect al host, para que
+quien pega vea el golpe sin esperar el round-trip.
+
+**Con jugadores, al revés: la víctima dispara y replica.** El daño PvP viaja por
+`take_damage_rpc.rpc_id(dueño)`, así que **la víctima es el único peer que se entera**
+—y el único que conoce el daño real, con defensa y escudo ya aplicados—. Por eso
+`longsword.gd → _feedback_hit()` lo genera local y lo reenvía con
+`_rpc_hit_feedback.rpc()` (unreliable: es adorno, no le compite ancho de banda al
+daño, que sí es fiable). El costo es medio viaje de red antes de que el que pega vea
+el impacto; en LAN es imperceptible.
+
+**Efectos de pantalla** (`screen_flash` / `camera_shake`): van en el autoload y **no
+en el HUD**, a propósito. El HUD es *información* —cuánta vida te queda—; esto es
+*feedback de combate* y tiene que funcionar con cualquier personaje y con el HUD
+apagado. La viñeta cuelga del autoload, así que sobrevive al cambio de escena y no
+hay que instanciarla en cada mapa.
+
+- Solo se tiñe la pantalla **de quien se come el golpe** (`is_multiplayer_authority()`).
+  Pegarle a otro no te enrojece la tuya.
+- Un golpe nuevo **pisa** al anterior en vez de encadenarse. Si se acumularan, una
+  ráfaga de golpes flojos dejaría la pantalla roja varios segundos.
+- El centro nunca se tiñe: taparte al personaje justo cuando más necesitás verlo es
+  exactamente lo contrario de lo que buscamos.
+- `camera_shake()` busca la cámara activa y le pide `shake()` por `has_method`, así
+  el sistema no queda atado a `iso_camera`.
+
+Perillas: `VIGNETTE_MAX` (opacidad), `VIGNETTE_TIME` (duración), el primer número del
+`smoothstep` en `VIGNETTE_SHADER` (cuánto entra hacia el centro — más bajo, más ancha
+la franja), y en `longsword.gd` el piso del `clampf` y el argumento de `camera_shake`.
 
 ## Trampas de trabajo (aprendidas a los golpes)
 
@@ -335,6 +365,13 @@ esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
   Solo `--editor` fuerza el escaneo y regenera `global_script_class_cache.cfg`.
   Un `Could not resolve class "X"` casi siempre es en cascada: el error real está
   en el script que define esa clase, no donde aparece el mensaje.
+- **`set_anchors_preset()` NO es `set_anchors_and_offsets_preset()`.** La primera
+  mueve las anclas y recalcula los offsets para **conservar el rect actual** — que en
+  un `Control` recién creado por código es **0×0**. El nodo queda en la escena, con su
+  material y su shader andando, midiendo cero píxeles: no da error, no aparece en el
+  remote tree como roto, simplemente no se ve. Para llenar la pantalla va
+  `set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)`. Costó una sesión de
+  debug de la viñeta de daño.
 - **GDScript no reduce el tipo dentro de un `and`.** `if n is Foo and n.prop` falla
   en parseo porque `n.prop` se evalúa contra el tipo declarado. Castear antes:
   `var f := n as Foo` y después chequear `f == null`.
@@ -343,6 +380,17 @@ esperar el round-trip. Los enemigos lo modulan con `feedback_scale`.
 
 ## Cámara (`shared/iso_camera.gd`)
 Isométrica. Pitch −30° a −80° (default −60°), yaw libre con click medio. Zoom ARM 5–20 (arranca en 20).
+
+**`shake(amount, duration)`** — sacudón de impacto, lo dispara `CombatFeedback.camera_shake()`.
+Tres cosas que no son obvias:
+1. **El shake está en unidades de MUNDO**, así que el mismo valor se ve enorme con la
+   cámara encima y no se nota desde lejos. Se escala por `arm / ARM_MAX` para que
+   tiemble lo mismo **en pantalla** a cualquier zoom. Sin eso, calibrarlo es imposible:
+   queda bien a una distancia y mal a todas las demás.
+2. **No acumula.** Un golpe fuerte pisa a uno flojo, pero dos flojos no suman uno
+   fuerte. Si se sumaran, una ráfaga de golpes chicos marea.
+3. **La vertical va a la mitad.** En isométrica el temblor en Y se lee como que salta
+   el piso, y marea mucho más rápido que el lateral.
 
 ## Cursor (`maps/map_01/world.gd → _update_cursor()`)
 Crosshair blanco 24x24 generado por código. Rojo sobre grupo `enemy` o `player_remote`. Raycast cada frame.
@@ -370,11 +418,151 @@ Windows nunca pregunto, hay que abrir el 7777 UDP a mano en el host. Las dos maq
 tienen que correr **la misma version de Godot**: si no, cada una reimporta los assets y
 los `.import` rebotan en git de un lado al otro.
 
+**Probar dos partidas en la MISMA maquina:** menu **Depurar -> multiples instancias**,
+poner 2. En ese mismo dialogo cada instancia tiene su casilla de argumentos:
+
+| Instancia | Argumentos |
+|---|---|
+| 1 | `--auto-host` |
+| 2 | `--auto-join` |
+
+Con eso F5 abre dos ventanas y **las dos entran solas a `pruebas.tscn`** — sin tocar
+Hostear, Unirse ni Iniciar. Salen apiladas: arrastrar una al costado.
+
+Flags de `ui/lobby/lobby.gd` (sin flags el lobby se comporta **exactamente** igual que
+antes, así que no ensucian el build real):
+
+| Flag | Qué hace |
+|---|---|
+| `--auto-host` | Hostea y arranca cuando hay suficientes jugadores |
+| `--auto-join` | Se une a `127.0.0.1` |
+| `--ip=192.168.0.5` | A dónde unirse (implica `--auto-join`) |
+| `--jugadores=3` | Cuántos esperar antes de arrancar solo (default 2) |
+
+Hay `AUTO_START_DELAY` de 0.4s antes del cambio de escena: le da margen al cliente
+recién conectado para terminar de armarse. La carrera es rara pero real.
+
+> **El hitstop se apaga solo con más de un peer** (cambiar `time_scale` en un cliente
+> desincronizaría la simulación). Probando a dos ventanas vas a ver flash, viñeta y
+> shake, pero **no** el micro-freeze. Ese solo se siente jugando solo.
+
 Jugadores remotos en grupo `player_remote`, spawneados como `Player_{peer_id}`.
 
 ---
 
-## Terreno — **en salida**
+## Export web (2026-08-27) — **el portón está abierto**
+
+**Existe build web y funciona.** Plantillas 4.7.2 instaladas, preset `Web` en
+`export_presets.cfg`, single-thread (`variant/thread_support=false`) como pide
+CrazyGames. El comando:
+
+```
+Godot_v4.7.2-stable_win64_console.exe --headless --export-release "Web" ../LotterWeb/index.html --path .
+```
+
+**Requisito no obvio:** el preset web exige
+`rendering/textures/vram_compression/import_etc2_astc=true` en `project.godot`.
+Sin eso el export aborta con *"configuration errors"* **y no dice cuál**. Ya está.
+
+**Probado en Chrome, no solo exportado.** El lobby carga y renderiza. Al tocar
+*Hostear* devuelve **"Error al crear servidor"**: ENet no puede abrir un socket UDP
+en el navegador. Confirmado a mano, no deducido.
+
+### Dos trampas del preset web, las dos pagadas a los golpes
+
+**1. `exclude_filter="*.fbx"` te borra las MALLAS, no las fuentes.** Godot resuelve
+`res://algo.fbx` **al recurso importado**, así que excluir el patrón excluye el `.scn`
+que sí se usa. Síntoma: la escena no carga y la consola tira
+`No loader found for resource: … .fbx (expected type: PackedScene)`. **El
+`exclude_filter` va vacío**: Godot ya exporta solo lo importado, nunca los fuentes.
+(Además falseaba el peso hacia abajo: el `.pck` medía 102 MB porque le faltaban los
+personajes. Con las mallas adentro son 109 MB.)
+
+**2. `vram_texture_compression/for_mobile=true` solo, deja el juego en blanco y negro
+en escritorio.** Manda únicamente texturas **ETC2**, y **Chrome de escritorio (ANGLE)
+no expone ETC2** — expone **S3TC**. Godot no puede subir ni una textura y todo queda
+con el material gris por defecto. El síntoma es inconfundible: **todo monocromo menos
+las barras de vida**, que son color plano sin textura y por eso sobreviven.
+
+Hoy el preset va con `for_desktop=true` / `for_mobile=false` (S3TC). **Anda en
+escritorio y NO andaría en un navegador de celular.**
+
+> **La solución de verdad, pendiente: `compress/mode` = Basis Universal.** Manda **una
+> sola copia** que se transcodifica en runtime a lo que soporte la GPU — S3TC, ETC2 o
+> BC7. Arregla escritorio y móvil a la vez **y pesa menos que cualquiera de las dos
+> variantes**, así que también empuja hacia los 50 MB. Es el próximo movimiento.
+
+### Dónde estamos contra CrazyGames
+
+| Límite | Nosotros | |
+|---|---|---|
+| Menos de 1.500 archivos | **9** | ✅ |
+| 250 MB totales | 142 MB crudos / **92 MB** transferidos | ✅ |
+| **50 MB de carga inicial** | **92 MB** | ❌ **1,85× por encima** |
+
+Se mide **comprimido**, que es lo que viaja por el cable:
+
+| | Crudo | gzip |
+|---|---|---|
+| `index.wasm` (el motor) | 39,5 MB | **10,2 MB** |
+| `index.pck` (el juego) | 102,1 MB | **82,0 MB** |
+
+El motor comprime 4×; **el `.pck` casi no comprime** porque las texturas ya vienen
+comprimidas en ETC2. O sea: **el problema es 100% texturas.**
+
+### Lo que ya se sacó (rama `web-build`)
+
+De **451 MB / 1.345 archivos** importados a **157 MB / 868**. Nada de esto era
+contenido del juego:
+
+| Qué | Peso | Por qué se fue |
+|---|---|---|
+| `Medieval Village MegaKit.zip` | 154 MB | El zip del pack, suelto en la raíz |
+| `addons/terrain_3d` | 76 MB | GDExtension **sin binarios para web**: bloquea el export |
+| `demo/` | 24 MB | Demo de Terrain3D |
+| `Goblin.fbx` + sus 4 texturas | 44 MB | **Sin una sola referencia**: el goblin visible sale de los FBX de animación |
+| `MapTerrain/` | 2,7 MB | Datos de Terrain3D |
+| `world.tscn` | — | Usaba Terrain3D. `pruebas.tscn` usa `world.gd`, no el `.tscn` |
+
+Está todo en `Desktop/lottergod_sacado/` — **movido, no borrado**.
+
+**75 texturas capadas** por `process/size_limit` en el `.import`: el goblin estaba en
+**4096×4096** (bajado a 512), personaje y pueblo en 2048 (a 1024). El importador solo
+achica: si la textura ya es más chica, no la toca. **No se tocó el arte original**, así
+que subir el techo de nuevo es cambiar un número.
+
+### Lo que falta para entrar en los 50 MB
+
+1. **Cada textura se importa DOS veces**, `.s3tc` (escritorio) y `.etc2` (web). En el
+   `.pck` va solo la que corresponde, pero conviene verificarlo.
+2. **Bajar el pueblo de 1024 a 512.** Es el grueso del `.pck`, y son texturas
+   *tileadas*: aguantan mucho más recorte que un personaje. Decisión visual.
+3. **Partir el `.pck`.** Godot carga packs adicionales en runtime: arrancás con el
+   mínimo jugable y bajás el resto de fondo. Es la salida real para "50 MB iniciales"
+   sin resignar contenido.
+
+> **`gl_compatibility` ya es el renderer** (`project.godot`), que es lo correcto para
+> web. La mención a Forward+ al principio de este documento está vieja.
+
+### Multijugador en web — WebRTC, no ENet
+
+**ENet no corre en navegador** (verificado: *Hostear* devuelve "Error al crear
+servidor"), y un browser **no puede aceptar conexiones entrantes**. Pero
+`WebRTCPeerConnection` / `WebRTCDataChannel` / `WebRTCMultiplayerPeer` **vienen
+incluidos en el export HTML5** — sin GDExtension, que en web no funciona (la consola
+del propio build lo dice: *"single-threaded, no GDExtension support"*).
+
+Dos navegadores **sí se hablan directo**. Hace falta un **servidor de señalización**:
+un WebSocket mínimo que solo presenta a los peers e intercambia SDP/ICE. Mueve KB por
+partida, no el tráfico del juego. Demo oficial: `networking/webrtc_signaling`.
+
+**Lo que no se tira:** la API multijugador de Godot es **agnóstica del transporte**.
+Se cambia `ENetMultiplayerPeer` por `WebRTCMultiplayerPeer` y **todo el código de RPC
+queda igual** — enemigos host-autoritativos, `rpc_id`, sync a 20 Hz, todo.
+
+Ver `DESIGN.md` §15.10 para el costo de STUN/TURN y las consecuencias de producto.
+
+## Terreno — **sacado del proyecto**
 Plugin Terrain3D. `data_directory = "res://MapTerrain"`. No recibe sombras de objetos dinámicos (limitación del plugin). `DirectionalLight3D`: shadow_enabled, max_distance 256, blur 2.0.
 
 > **Terrain3D no sobrevive a la web.** Su export HTML5 es experimental y exige hilos
@@ -391,12 +579,39 @@ Plugin Terrain3D. `data_directory = "res://MapTerrain"`. No recibe sombras de ob
 ---
 
 ## Pendiente (roadmap)
-- [ ] Sistema de loot (drop de items al morir enemigo)
-- [ ] Inventario + pantalla de equipamiento
-- [ ] Persistencia de CharacterStats a disco por cuenta
-- [ ] Más enemigos (×10 objetivo) y bosses
+
+> **El orden lo manda `DESIGN.md` §15.7.** Esta lista es el inventario técnico; el
+> plan de producción y qué está **estacionado a propósito** están allá (§15.6).
+
+**Fase 0 — gamefeel + sonido** (en curso)
+- [x] `CombatFeedback` cableado al jugador: flash, números y estallido en PvP
+- [x] Viñeta roja de daño y shake de cámara
+- [ ] **Sonido — hoy es cero.** Correr, atacar, recibir daño, morir + música de fondo.
+      Packs libres: Kenney *Impact Sounds* y *RPG Audio* (CC0); música en Incompetech
+      o FreePD. Van a `assets/audio/`.
+
+**Fase 1 — sistema de habilidades** (siguiente)
+- [ ] **Ulti con R en el Longsword** — *"Ejecución"*: cast ~0.6s inmóvil y
+      telegrafiado, daño alto, ejecuta por debajo del 25% de HP y resetea su CD.
+      Es el vehículo para construir la barra de casteo y la interrupción sin
+      convertir al Longsword en caster (ver `DESIGN.md` §15.4)
+- [ ] Cast time con barra, cancelable e interrumpible
+- [ ] Skillshot lineal (proyectil) y skillshot al suelo con indicador
+- [ ] Indicadores de apuntado en el piso
+- [ ] Puntos de habilidad por nivel, rangos 1–3, R a nivel 6 (§15.3)
+
+**Fase 2 — personaje 2**, opuesto al actual: caster a distancia, frágil
+**Fase 3 — enemigos que telegrafíen** y obliguen a esquivar
+**Fase 4 — loot** (solo el que cambia lo que hacés, no el que cambia cómo te ves)
+
+**Sin fase asignada**
 - [ ] Animaciones de daño y muerte
 - [ ] HP bar 3D sobre jugadores remotos
-- [ ] Assets medievales (Kenney Castle Kit + Nature Kit)
-- [ ] Múltiples personajes elegibles
-- [ ] Múltiples mapas
+- [ ] Export HTML5: no existe preset todavía. **Todo §5 de `DESIGN.md` está sin
+      verificar** — ENet no corre en browser (hay que ir a WebSocket) y no sabemos
+      el peso real contra los 50 MB de CrazyGames
+- [ ] Sacar Terrain3D de `world.tscn` y borrar el plugin (~50 MB)
+- [ ] Catalogar los bugs del combate (`DESIGN.md` §12, pendiente hace tiempo)
+
+**Estacionado** (ver `DESIGN.md` §15.6 para los motivos): equipo modular / cambiar el
+look, progresión permanente entre partidas, idle + fantasmas, más mapa, personajes 3+.

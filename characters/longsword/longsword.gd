@@ -25,6 +25,15 @@ const HP_REGEN_CD      = 5.0
 const MANA_REGEN       = 5.0
 const MANA_REGEN_CD    = 2.0
 
+# --- Feedback de golpe recibido ---
+## Altura del numero de danio sobre el pivote. El personaje esta sobredimensionado
+## (ver CLAUDE.md), por eso 3.0 y no la altura nominal de la capsula.
+const DMG_NUMBER_HEIGHT := 3.0
+const DMG_NUMBER_COLOR  := Color(1.0, 0.35, 0.30)
+## Con cuanto danio de un solo golpe la vinieta llega al maximo, como fraccion
+## del HP total. Un cuarto de la vida de una = pantalla roja del todo.
+const HIT_FULL_FRACTION := 0.25
+
 @export var stats: CharacterStats
 
 var current_hp:      float
@@ -421,8 +430,45 @@ func take_damage(amount: float):
 	current_hp = clamp(current_hp - actual, 0, stats.max_hp)
 	hp_regen_timer = HP_REGEN_CD
 	hp_changed.emit(current_hp, stats.max_hp)
+	_feedback_hit(actual)
+	if NetworkManager.multiplayer_mode:
+		_rpc_hit_feedback.rpc(actual)
 	if current_hp <= 0:
 		_die()
+
+## Feedback visual de un golpe recibido.
+##
+## Con los enemigos, todos los peers ven el golpe y cada uno genera su propio
+## feedback. Con los jugadores no se puede: el danio viaja por
+## `take_damage_rpc.rpc_id(dueno)`, asi que la victima es el UNICO peer que se
+## entera —y ademas es el unico que conoce el danio real, con defensa y escudo
+## ya aplicados. Por eso acá la victima dispara el suyo y lo replica al resto.
+##
+## El costo es medio viaje de red antes de que el que pega vea el impacto. En
+## LAN es imperceptible; si con gente lejos se nota, la alternativa es que el
+## atacante prediga el flash al pegar y la victima no lo re-emita hacia el.
+func _feedback_hit(actual: float) -> void:
+	if actual <= 0.0:
+		return
+	CombatFeedback.flash(self)
+	CombatFeedback.damage_number(
+		global_position + Vector3.UP * DMG_NUMBER_HEIGHT, actual, DMG_NUMBER_COLOR)
+
+	# La pantalla solo se tiñe para el que se esta comiendo el golpe. Un golpe a
+	# otro jugador no te enrojece la tuya.
+	if not is_multiplayer_authority():
+		return
+	var techo := maxf(1.0, stats.max_hp * HIT_FULL_FRACTION)
+	var fuerza := clampf(actual / techo, 0.40, 1.0)
+	CombatFeedback.screen_flash(fuerza)
+	CombatFeedback.camera_shake(0.035 + 0.075 * fuerza)
+	CombatFeedback.hitstop(0.8)
+
+## Unreliable a proposito: es puro adorno. Si se pierde un paquete se pierde un
+## flash, y es preferible a competirle ancho de banda al danio, que si es fiable.
+@rpc("any_peer", "unreliable")
+func _rpc_hit_feedback(actual: float) -> void:
+	_feedback_hit(actual)
 
 func add_experience(amount: int):
 	if not stats:
@@ -470,8 +516,18 @@ func _die():
 	velocity  = Vector3.ZERO
 	respawn_timer = RESPAWN_TIME
 	visible   = false
+	_feedback_muerte()
 	if NetworkManager.multiplayer_mode:
 		_rpc_die.rpc()
+
+## El estallido lo ven todos: se dispara tanto en `_die()` (dueño) como en
+## `_rpc_die()` (el resto), asi que no hace falta un RPC propio.
+func _feedback_muerte() -> void:
+	CombatFeedback.death_burst(
+		global_position + Vector3.UP * 1.2, 1.3, Color(0.85, 0.2, 0.15))
+	if is_multiplayer_authority():
+		CombatFeedback.screen_flash(1.0)
+		CombatFeedback.camera_shake(0.18, 0.30)
 
 func _respawn():
 	dead            = false
@@ -493,6 +549,7 @@ func _respawn():
 @rpc("any_peer", "reliable")
 func _rpc_die():
 	dead    = true
+	_feedback_muerte()
 	visible = false
 
 @rpc("any_peer", "reliable")

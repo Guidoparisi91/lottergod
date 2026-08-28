@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://blus8aabka7kl"
 path.s3tc="res://.godot/imported/pasto_base.png-0a2675bd838958335ecbaa47a50f1679.s3tc.ctex"
+path.etc2="res://.godot/imported/pasto_base.png-0a2675bd838958335ecbaa47a50f1679.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Textures/Tierra/pasto_base.png"
-dest_files=["res://.godot/imported/pasto_base.png-0a2675bd838958335ecbaa47a50f1679.s3tc.ctex"]
+dest_files=["res://.godot/imported/pasto_base.png-0a2675bd838958335ecbaa47a50f1679.s3tc.ctex", "res://.godot/imported/pasto_base.png-0a2675bd838958335ecbaa47a50f1679.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://choyyebo46omq"
 path.s3tc="res://.godot/imported/T_MetalOrnaments_Roughness.png-f63c6a7ea1fd151948a4f601b536c3a2.s3tc.ctex"
+path.etc2="res://.godot/imported/T_MetalOrnaments_Roughness.png-f63c6a7ea1fd151948a4f601b536c3a2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/environment/medieval_village/glTF/T_MetalOrnaments_Roughness.png"
-dest_files=["res://.godot/imported/T_MetalOrnaments_Roughness.png-f63c6a7ea1fd151948a4f601b536c3a2.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_MetalOrnaments_Roughness.png-f63c6a7ea1fd151948a4f601b536c3a2.s3tc.ctex", "res://.godot/imported/T_MetalOrnaments_Roughness.png-f63c6a7ea1fd151948a4f601b536c3a2.etc2.ctex"]
 
 [params]
 
