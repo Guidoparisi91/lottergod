@@ -14,8 +14,9 @@ extends BaseEnemy
 
 const ANIM_NAME = "mixamo_com"
 
-## Escala del cuerpo. Se aplica después de que BaseEnemy termine su setup.
-@export var body_scale: float = 2.0
+## Tamaño del cuerpo respecto del modelo, que viene en metros (el goblin mide
+## 1,7 m de pie). Agranda modelo y cápsula; ver `_aplicar_body_scale()`.
+@export var body_scale: float = 1.0
 ## Velocidad de reproducción del ataque. Más bajo = wind-up más lento y más legible.
 @export var attack_anim_speed: float = 1.5
 ## En qué punto de la animación de ataque conecta el golpe (0..1).
@@ -38,7 +39,7 @@ var _attacking:   bool   = false
 func _ready():
 	super._ready()
 
-	scale = Vector3(body_scale, body_scale, body_scale)
+	_aplicar_body_scale()
 
 	idle_anim  = _find_anim(idle_node)
 	walk_anim  = _find_anim(walk_node)
@@ -58,6 +59,31 @@ func _ready():
 		CombatFeedback.apply_tint(self, body_tint)
 
 	_set_anim("idle")
+
+
+## Agranda el MODELO y la CÁPSULA, nunca el cuerpo físico. Escalar un
+## CharacterBody3D es algo que Godot no garantiza, y además arrastra a todos los
+## hijos: el día que se le cuelga un cartel o una partícula hay que compensarlo.
+##
+## La forma se duplica: el recurso es COMPARTIDO entre todas las instancias de la
+## escena, y agrandarlo en el lugar lo agrandaría una vez más por cada goblin.
+func _aplicar_body_scale() -> void:
+	for nodo in [idle_node, walk_node, swipe_node]:
+		(nodo as Node3D).scale = Vector3(body_scale, body_scale, body_scale)
+	for hijo in get_children():
+		var c := hijo as CollisionShape3D
+		if c == null or c.shape == null:
+			continue
+		var cap := c.shape as CapsuleShape3D
+		if cap == null:
+			continue
+		cap = cap.duplicate() as CapsuleShape3D
+		# El alto ANTES que el radio: Godot no deja un radio mayor que medio alto y
+		# lo corrige solo, asi que al reves el alto se multiplica dos veces.
+		cap.height *= body_scale
+		cap.radius *= body_scale
+		c.shape = cap
+		c.position.y *= body_scale
 
 
 ## Mientras dura la animación de ataque el enemigo queda comprometido: no gira.

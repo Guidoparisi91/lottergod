@@ -148,14 +148,15 @@ func damage_number(world_pos: Vector3, amount: float, color: Color = Color(1, 1,
 	label.no_depth_test    = true
 	label.outline_size     = int(14 * size)
 	label.outline_modulate = Color(0, 0, 0, 1)
+	label.pixel_size       = 0.0025
 	host.add_child(label)
 
 	# Dispersión lateral para que golpes seguidos no se apilen en el mismo pixel
-	var jitter := Vector3(randf_range(-0.6, 0.6), 0.0, randf_range(-0.6, 0.6))
+	var jitter := Vector3(randf_range(-0.3, 0.3), 0.0, randf_range(-0.3, 0.3))
 	label.global_position = world_pos + jitter
 
 	var tween := label.create_tween().set_parallel(true)
-	tween.tween_property(label, "global_position:y", world_pos.y + 2.2, DMG_RISE_TIME) \
+	tween.tween_property(label, "global_position:y", world_pos.y + 1.1, DMG_RISE_TIME) \
 		 .set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "modulate:a", 0.0, DMG_RISE_TIME * 0.6) \
 		 .set_delay(DMG_RISE_TIME * 0.4)
@@ -181,9 +182,9 @@ func death_burst(world_pos: Vector3, size: float = 1.0, color: Color = Color(0.8
 	p.randomness           = 0.6
 	p.direction            = Vector3(0, 1, 0)
 	p.spread               = 65.0
-	p.gravity              = Vector3(0, -12.0, 0)
-	p.initial_velocity_min = 3.0 * size
-	p.initial_velocity_max = 8.0 * size
+	p.gravity              = Vector3(0, -6.0, 0)
+	p.initial_velocity_min = 1.5 * size
+	p.initial_velocity_max = 4.0 * size
 	p.scale_amount_min     = 0.15 * size
 	p.scale_amount_max     = 0.4  * size
 	p.damping_min          = 1.0
@@ -201,8 +202,8 @@ func death_burst(world_pos: Vector3, size: float = 1.0, color: Color = Color(0.8
 	p.color_ramp = grad
 
 	var mesh := SphereMesh.new()
-	mesh.radius   = 0.14
-	mesh.height   = 0.28
+	mesh.radius   = 0.07
+	mesh.height   = 0.14
 	mesh.material = mat
 	p.mesh = mesh
 
@@ -248,7 +249,7 @@ func screen_flash(intensity: float = 1.0) -> void:
 
 ## Sacudón de cámara. Le pide el shake a la cámara activa; si la cámara de turno
 ## no lo implementa, no pasa nada. Así esto no ata el feedback a `iso_camera`.
-func camera_shake(amount: float = 0.25, duration: float = 0.18) -> void:
+func camera_shake(amount: float = 0.125, duration: float = 0.18) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(amount, duration)

@@ -1,11 +1,11 @@
 extends Node3D
 
-const ATTACK_RANGE = 2.5
+const ATTACK_RANGE = 1.25
 
 @onready var camera: Camera3D = $IsoCamera
 @onready var hud              = $HUD
 
-const SPAWN_ORIGIN = Vector3(0.0, 5.0, 0.0)
+const SPAWN_ORIGIN = Vector3(0.0, 2.5, 0.0)
 
 var local_player: CharacterBody3D = null
 var player_scene = preload("res://characters/longsword/longsword.tscn")
@@ -86,7 +86,7 @@ func _spawn_player(peer_id: int):
 	# correrlo al costado. El desplazamiento solo aplica al spawn único.
 	var spawn_pos = _spawn_origin(max(0, idx))
 	if get_tree().get_nodes_in_group("player_spawn").is_empty():
-		spawn_pos += Vector3(max(0, idx) * 2.0, 0.0, 0.0)
+		spawn_pos += Vector3(max(0, idx) * 1.0, 0.0, 0.0)
 	p.position    = spawn_pos
 
 	add_child(p)

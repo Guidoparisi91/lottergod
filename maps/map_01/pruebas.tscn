@@ -41,15 +41,14 @@ fog_light_color = Color(0.52, 0.56, 0.62, 1)
 fog_density = 0.0
 fog_sky_affect = 0.0
 fog_depth_curve = 2.0
-fog_depth_begin = 90.0
-fog_depth_end = 190.0
+fog_depth_begin = 45.0
+fog_depth_end = 95.0
 
 [node name="World" type="Node3D" unique_id=305143245]
 script = ExtResource("world_script")
 
 [node name="Terreno" type="Node3D" parent="." unique_id=1100582611]
 script = ExtResource("hterrain_script")
-map_scale = Vector3(2, 1, 2)
 centered = true
 _terrain_data = ExtResource("terreno_data")
 chunk_size = 32
@@ -72,7 +71,7 @@ light_energy = 1.25
 shadow_enabled = true
 shadow_blur = 2.0
 directional_shadow_blend_splits = true
-directional_shadow_max_distance = 256.0
+directional_shadow_max_distance = 128.0
 
 [node name="IsoCamera" type="Camera3D" parent="." unique_id=59859658]
 script = ExtResource("camera_script")
@@ -85,17 +84,17 @@ script = ExtResource("camera_script")
 script = ExtResource("wave_script")
 enemy_scene = ExtResource("goblin")
 min_spawn_interval = 0.6
-spawn_radius_min = 25.0
-spawn_radius_max = 35.0
+spawn_radius_min = 12.5
+spawn_radius_max = 17.5
 max_alive_base = 8
 max_alive_per_wave = 2
 spawn_alerted = false
 
 [node name="GoblinKing" parent="." unique_id=68277092 instance=ExtResource("boss")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36372757, 1, -24)
-body_scale = 6.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18186378, 0.5, -12)
+body_scale = 3.0
 body_tint = Color(0.3491902, 0.025840001, 0.050708726, 0.48200002)
-speed = 4.0
+speed = 2.0
 
 [node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1827121494]
-transform = Transform3D(-0.560572, 0, 0.82810575, 0, 1, 0, -0.82810575, 0, -0.560572, 2.0183182, 0, 69.42151)
+transform = Transform3D(-0.560572, 0, 0.82810575, 0, 1, 0, -0.82810575, 0, -0.560572, 1.0091591, 0, 34.710755)

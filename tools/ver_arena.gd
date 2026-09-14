@@ -24,15 +24,15 @@ func _ready() -> void:
 func _process(_d: float) -> void:
 	_f += 1
 	if _f == 40:
-		_cam.position = Vector3(0, 235, 150)
+		_cam.position = Vector3(0, 117.5, 75)
 		_cam.look_at(Vector3(0, 0, 0))
 		_cam.current = true
 	if _f == 75:
 		get_viewport().get_texture().get_image().save_png("user://arena_planta.png")
 		print("VER> planta lista")
 		# nivel de suelo, saliendo del spawn SO hacia el centro
-		_cam.position = Vector3(-74, 20, -74)
-		_cam.look_at(Vector3(-40, 2, -40))
+		_cam.position = Vector3(-37, 10, -37)
+		_cam.look_at(Vector3(-20, 1, -20))
 	if _f == 115:
 		get_viewport().get_texture().get_image().save_png("user://arena_suelo.png")
 		print("VER> suelo listo")

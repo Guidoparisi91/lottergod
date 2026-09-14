@@ -8,8 +8,8 @@ signal stats_changed(wave: int, kills: int)
 @export var wave_duration:       float = 60.0  # segundos hasta la siguiente wave
 @export var base_spawn_interval: float = 3.0   # tiempo entre spawns en wave 1
 @export var min_spawn_interval:  float = 0.5   # límite mínimo de spawn rate
-@export var spawn_radius_min:    float = 20.0
-@export var spawn_radius_max:    float = 40.0
+@export var spawn_radius_min:    float = 10.0
+@export var spawn_radius_max:    float = 20.0
 @export var max_alive_base:      int   = 12    # máximo de enemigos vivos en wave 1
 @export var max_alive_per_wave:  int   = 3     # extra por wave
 ## true  = nacen yendo hacia el jugador, sin importar la distancia (asedio).
@@ -92,13 +92,13 @@ func _pos_from_angle(center: Vector3, angle: float, radius: float) -> Variant:
 	var base_pos = center + offset
 	var space    = get_world_3d().direct_space_state
 	var query    = PhysicsRayQueryParameters3D.create(
-		base_pos + Vector3.UP * 200.0,
-		base_pos + Vector3.DOWN * 50.0
+		base_pos + Vector3.UP * 100.0,
+		base_pos + Vector3.DOWN * 25.0
 	)
 	var hit = space.intersect_ray(query)
 	if hit.is_empty():
 		return null
-	return hit.position + Vector3.UP * 0.5
+	return hit.position + Vector3.UP * 0.25
 
 func _get_center() -> Vector3:
 	var players = get_tree().get_nodes_in_group("player_local") \
@@ -134,7 +134,7 @@ func _do_spawn(pos: Vector3, eid: int, wave: int) -> void:
 		else:
 			# Nace neutral: patrulla su zona de spawn y solo reacciona cuando
 			# el jugador entra en detection_range.
-			e.set_patrol_area(pos, Vector2(12.0, 12.0))
+			e.set_patrol_area(pos, Vector2(6.0, 6.0))
 			e.state = BaseEnemy.State.PATROL
 
 @rpc("authority", "reliable")

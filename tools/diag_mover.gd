@@ -32,10 +32,10 @@ func _process(_d: float) -> void:
 			return
 		_jug = js[0]
 		_inicio = _jug.global_position
-		# Destino: 30 unidades hacia el CENTRO del mapa.
+		# Destino: 15 m hacia el CENTRO del mapa.
 		var hacia := (Vector3.ZERO - _inicio)
 		hacia.y = 0.0
-		_destino = _inicio + hacia.normalized() * 30.0
+		_destino = _inicio + hacia.normalized() * 15.0
 		print("MOV> jugador arranca en (%.1f, %.1f, %.1f)" % [_inicio.x, _inicio.y, _inicio.z])
 		print("MOV> le pido ir a      (%.1f, %.1f, %.1f)" % [_destino.x, _destino.y, _destino.z])
 		_jug.move_to(_destino)
@@ -51,7 +51,7 @@ func _process(_d: float) -> void:
 		var p := _jug.global_position
 		var esperado := Vector2(_destino.x - _inicio.x, _destino.z - _inicio.z).normalized()
 		var real := Vector2(p.x - _inicio.x, p.z - _inicio.z)
-		if real.length() < 1.0:
+		if real.length() < 0.5:
 			print("MOV> RESULTADO: no se movio")
 		else:
 			var ang := rad_to_deg(esperado.angle_to(real.normalized()))

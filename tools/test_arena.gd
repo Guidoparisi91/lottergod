@@ -8,10 +8,12 @@ extends Node
 #      esten realmente abiertas (si una se tapo, la plaza deja de tener sus
 #      cuatro accesos y se puede campear).
 #   3. Que los dos spawns esten sobre piso solido y separados.
+#
+# En METROS desde 2026-09-14 (antes el mundo iba x2).
 
 const ESCENA := "res://maps/map_01/arena_pruebas.tscn"
-const LIMITE := 97.0
-const ALTURA := 3.0
+const LIMITE := 48.5
+const ALTURA := 1.5
 
 var _f := 0
 var _raiz: Node
@@ -43,12 +45,12 @@ func _process(_d: float) -> void:
 		var a := TAU * float(i) / 72.0
 		var dir := Vector3(cos(a), 0.0, sin(a))
 		# El borde es un CUADRADO, no un circulo: si escalamos por el radio, en
-		# las diagonales el rayo termina en (-90, 90), que todavia esta adentro,
+		# las diagonales el rayo termina en (-45, 45), que todavia esta adentro,
 		# y el test reporta una fuga que no existe. Escalamos por la componente
 		# mas grande para salir de verdad por el lado que toque.
 		var mayor := maxf(absf(dir.x), absf(dir.z))
-		var desde: Vector3 = dir * ((LIMITE - 12.0) / mayor) + Vector3(0, ALTURA, 0)
-		var hasta: Vector3 = dir * ((LIMITE + 30.0) / mayor) + Vector3(0, ALTURA, 0)
+		var desde: Vector3 = dir * ((LIMITE - 6.0) / mayor) + Vector3(0, ALTURA, 0)
+		var hasta: Vector3 = dir * ((LIMITE + 15.0) / mayor) + Vector3(0, ALTURA, 0)
 		probados += 1
 		if not _choca(desde, hasta):
 			fugas += 1
@@ -60,18 +62,18 @@ func _process(_d: float) -> void:
 	# --- 2. plaza del boss: muros frenan, entradas abiertas ---
 	var entradas_abiertas := 0
 	for dir: Vector3 in [Vector3(0, 0, -1), Vector3(0, 0, 1), Vector3(-1, 0, 0), Vector3(1, 0, 0)]:
-		var desde: Vector3 = dir * 40.0 + Vector3(0, ALTURA, 0)
-		var hasta: Vector3 = dir * 10.0 + Vector3(0, ALTURA, 0)
+		var desde: Vector3 = dir * 20.0 + Vector3(0, ALTURA, 0)
+		var hasta: Vector3 = dir * 5.0 + Vector3(0, ALTURA, 0)
 		if not _choca(desde, hasta):
 			entradas_abiertas += 1
 	print("TEST> entradas a la plaza abiertas: %d de 4" % entradas_abiertas)
 
 	var muros_frenan := 0
 	for dir: Vector3 in [Vector3(0, 0, -1), Vector3(0, 0, 1), Vector3(-1, 0, 0), Vector3(1, 0, 0)]:
-		# 20 unidades al costado de la entrada: ahi tiene que haber muro
-		var lado := Vector3(dir.z, 0.0, dir.x) * 20.0
-		var desde: Vector3 = dir * 40.0 + lado + Vector3(0, ALTURA, 0)
-		var hasta: Vector3 = dir * 10.0 + lado + Vector3(0, ALTURA, 0)
+		# 10 m al costado de la entrada: ahi tiene que haber muro
+		var lado := Vector3(dir.z, 0.0, dir.x) * 10.0
+		var desde: Vector3 = dir * 20.0 + lado + Vector3(0, ALTURA, 0)
+		var hasta: Vector3 = dir * 5.0 + lado + Vector3(0, ALTURA, 0)
 		if _choca(desde, hasta):
 			muros_frenan += 1
 	print("TEST> tramos de muro que frenan: %d de 4" % muros_frenan)
@@ -82,11 +84,11 @@ func _process(_d: float) -> void:
 	print("TEST> marcadores de spawn: %d" % marcas.size())
 	for m in marcas:
 		var p := (m as Node3D).global_position
-		var suelo := _choca(p + Vector3(0, 3, 0), p - Vector3(0, 6, 0))
+		var suelo := _choca(p + Vector3(0, 1.5, 0), p - Vector3(0, 3, 0))
 		print("TEST>   %s en (%.0f, %.0f)  piso solido: %s" % [m.name, p.x, p.z, suelo])
 	if marcas.size() >= 2:
 		var d: float = (marcas[0].global_position - marcas[1].global_position).length()
-		print("TEST> distancia entre spawns: %.0f unidades" % d)
+		print("TEST> distancia entre spawns: %.0f m" % d)
 
 	# --- 4. nidos y boss ---
 	print("TEST> nidos: %d" % get_tree().get_nodes_in_group("enemy_pit").size())

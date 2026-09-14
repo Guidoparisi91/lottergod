@@ -1,11 +1,11 @@
 extends CharacterBody3D
 
 const RUN_MULTIPLIER  = 1.114  # RUN_SPEED / WALK_SPEED, reducido 20% de 1.393
-const GRAVITY         = -20.0
-const STOP_DISTANCE   = 0.25
+const GRAVITY         = -10.0
+const STOP_DISTANCE   = 0.125
 const IDLE_DELAY      = 0.15
 const ATTACK_SPEED    = 1.5
-const TILE_SIZE       = 1.5
+const TILE_SIZE       = 0.75
 
 # Multiplicadores de skills (sobre stats.attack)
 const Q_MULTIPLIER    = 15.0
@@ -14,7 +14,7 @@ const W_DURATION      = 4.0
 const W_CD            = 10.0
 const E_MULTIPLIER    = 12.0
 const E_CD            = 7.0
-const E_DISTANCE      = 9.6
+const E_DISTANCE      = 4.8
 const E_DASH_DURATION = 0.68
 
 const STAMINA_DRAIN    = 10.0
@@ -26,9 +26,8 @@ const MANA_REGEN       = 5.0
 const MANA_REGEN_CD    = 2.0
 
 # --- Feedback de golpe recibido ---
-## Altura del numero de danio sobre el pivote. El personaje esta sobredimensionado
-## (ver CLAUDE.md), por eso 3.0 y no la altura nominal de la capsula.
-const DMG_NUMBER_HEIGHT := 3.0
+## Altura del numero de danio sobre los pies, en metros: apenas sobre la cabeza.
+const DMG_NUMBER_HEIGHT := 1.5
 const DMG_NUMBER_COLOR  := Color(1.0, 0.35, 0.30)
 ## Con cuanto danio de un solo golpe la vinieta llega al maximo, como fraccion
 ## del HP total. Un cuarto de la vida de una = pantalla roja del todo.
@@ -111,7 +110,9 @@ var spawn_position: Vector3 = Vector3.ZERO
 var last_safe_pos:  Vector3 = Vector3.ZERO
 
 func _ready():
-	scale = Vector3(2.0, 2.0, 2.0)
+	# Sin scale en la raiz, nunca. Hasta 2026-09-14 aca habia un x2 que agrandaba
+	# el cuerpo fisico entero y obligo a escalar el mundo x2 para compensar. El
+	# modelo de Mixamo ya viene en metros: 1,76 m de pie, junto a puertas de 2,10.
 
 	for node in [idle_node, walk_node, run_node, slash_node, jump_node]:
 		for mesh in node.find_children("*", "MeshInstance3D", true, false):
@@ -135,7 +136,7 @@ func _ready():
 	current_stamina = stats.max_stamina
 	current_mana    = stats.max_mana
 
-	nav_agent.path_desired_distance  = 0.3
+	nav_agent.path_desired_distance  = 0.15
 	nav_agent.target_desired_distance = STOP_DISTANCE
 
 	# Loop mode y root motion aplican a todos (local y remoto)
@@ -275,7 +276,7 @@ func _physics_process(delta):
 			# Usá el path del nav_agent si hay uno válido; si no, va directo
 			var next_pos = nav_agent.get_next_path_position()
 			var to_next  = Vector3(next_pos.x - global_position.x, 0.0, next_pos.z - global_position.z)
-			var dir      = to_next.normalized() if to_next.length() > 0.4 else to_target.normalized()
+			var dir      = to_next.normalized() if to_next.length() > 0.2 else to_target.normalized()
 			velocity.x = dir.x * speed
 			velocity.z = dir.z * speed
 			rotation.y = atan2(dir.x, dir.z)
@@ -292,7 +293,7 @@ func _physics_process(delta):
 	# Si el player intenta moverse pero físicamente no avanza, cancelar
 	if moving and not attacking:
 		var cur_xz = Vector2(global_position.x, global_position.z)
-		if cur_xz.distance_to(_prev_xz) < delta * 0.5:
+		if cur_xz.distance_to(_prev_xz) < delta * 0.25:
 			_stuck_timer += delta
 			if _stuck_timer >= STUCK_TIME:
 				moving        = false
@@ -310,7 +311,7 @@ func _check_dash_hits():
 		if target in e_hit_set:
 			continue
 		var dist = global_position.distance_to(target.global_position)
-		if dist < 1.8:
+		if dist < 0.9:
 			e_hit_set.append(target)
 			var dmg = stats.attack * E_MULTIPLIER
 			if target.is_in_group("enemy"):
@@ -321,7 +322,7 @@ func _check_dash_hits():
 					push_dir = push_dir.normalized()
 				else:
 					push_dir = Vector3(sin(rotation.y), 0, cos(rotation.y))
-				target.apply_knockback(push_dir * 10.0)
+				target.apply_knockback(push_dir * 5.0)
 			else:
 				target.take_damage_rpc.rpc_id(target.get_multiplayer_authority(), dmg)
 
@@ -349,7 +350,7 @@ func stop():
 
 func face_toward(pos: Vector3):
 	var dir = Vector3(pos.x - global_position.x, 0.0, pos.z - global_position.z)
-	if dir.length() > 0.1:
+	if dir.length() > 0.05:
 		rotation.y = atan2(dir.x, dir.z)
 
 func attack_target(target: Node3D):
@@ -461,7 +462,7 @@ func _feedback_hit(actual: float) -> void:
 	var techo := maxf(1.0, stats.max_hp * HIT_FULL_FRACTION)
 	var fuerza := clampf(actual / techo, 0.40, 1.0)
 	CombatFeedback.screen_flash(fuerza)
-	CombatFeedback.camera_shake(0.035 + 0.075 * fuerza)
+	CombatFeedback.camera_shake(0.0175 + 0.0375 * fuerza)
 	CombatFeedback.hitstop(0.8)
 
 ## Unreliable a proposito: es puro adorno. Si se pierde un paquete se pierde un
@@ -498,13 +499,11 @@ func _show_levelup_text():
 	label.no_depth_test    = true
 	label.outline_size     = 14
 	label.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
-	# Hijo del player para seguirlo; scale 0.5 cancela el 2x del player
-	label.scale    = Vector3(0.5, 0.5, 0.5)
-	label.position = Vector3(0, 2.0, 0)  # 2 unidades locales = 4 world units sobre los pies
+	label.pixel_size = 0.0025
+	label.position   = Vector3(0, 2.0, 0)
 	add_child(label)
 
 	var tween = label.create_tween().set_parallel(true)
-	# Animar en espacio local: sube 1 unidad local (= 2 world units)
 	tween.tween_property(label, "position:y", 3.0, 1.4)
 	tween.tween_property(label, "modulate:a", 0.0, 1.4).set_delay(0.4)
 	tween.finished.connect(label.queue_free)
@@ -524,10 +523,10 @@ func _die():
 ## `_rpc_die()` (el resto), asi que no hace falta un RPC propio.
 func _feedback_muerte() -> void:
 	CombatFeedback.death_burst(
-		global_position + Vector3.UP * 1.2, 1.3, Color(0.85, 0.2, 0.15))
+		global_position + Vector3.UP * 0.6, 1.3, Color(0.85, 0.2, 0.15))
 	if is_multiplayer_authority():
 		CombatFeedback.screen_flash(1.0)
-		CombatFeedback.camera_shake(0.18, 0.30)
+		CombatFeedback.camera_shake(0.09, 0.30)
 
 func _respawn():
 	dead            = false
@@ -537,7 +536,7 @@ func _respawn():
 	hp_regen_timer  = 0.0
 	mana_regen_timer = 0.0
 	var pos = last_safe_pos if last_safe_pos != Vector3.ZERO else spawn_position
-	global_position = pos + Vector3(0, 0.5, 0)
+	global_position = pos + Vector3(0, 0.25, 0)
 	visible         = true
 	_set_state("idle")
 	hp_changed.emit(current_hp, stats.max_hp)
@@ -623,7 +622,7 @@ func _setup_dust_particles():
 
 	dust_particles.direction            = Vector3(0, 1, 0)
 	dust_particles.spread               = 70.0
-	dust_particles.gravity              = Vector3(0, -4.0, 0)
+	dust_particles.gravity              = Vector3(0, -2.0, 0)
 	dust_particles.initial_velocity_min = 1.5
 	dust_particles.initial_velocity_max = 3.5
 	dust_particles.scale_amount_min     = 0.2
@@ -681,7 +680,7 @@ func take_damage_rpc(amount: float):
 
 func _separation_force() -> Vector3:
 	var force   = Vector3.ZERO
-	var radius  = 2.2
+	var radius  = 1.1
 	var targets = get_tree().get_nodes_in_group("enemy") \
 				+ get_tree().get_nodes_in_group("player_remote")
 	for ob in targets:

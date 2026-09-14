@@ -18,7 +18,7 @@ extends Resource
 @export var base_max_mana:    float = 100.0
 @export var base_attack:      float = 1.0
 @export var base_defense:     float = 0.0
-@export var base_speed:       float = 7.0
+@export var base_speed:       float = 3.5
 
 # --- Stats calculados (base + bonos de equipo) ---
 var max_hp:      float

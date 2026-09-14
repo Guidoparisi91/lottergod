@@ -69,6 +69,7 @@ tools/                   NO son parte del juego, no se instancian en runtime
   ver_arena.*            saca fotos de planta y de suelo
   diag_click.*           qué golpea el raycast del click en cada zona de pantalla
   diag_mover.*           le pide al jugador ir a un punto y mide a dónde va
+  medir_escala.*         mide tamaños y distancias con el juego corriendo (§Escala)
 ui/
   hud/                   hud.tscn + hud.gd
   lobby/                 lobby.tscn + lobby.gd
@@ -117,12 +118,12 @@ Resource en `systems/stats/character_stats.gd`. Se instancia en `player._ready()
 ## Personaje — Longsword (`characters/longsword/longsword.gd`)
 **Convención de nombres:** cada personaje vive en `characters/<nombre>/` con archivos `<nombre>.gd` y `<nombre>.tscn`. No usar nombres genéricos como `player.gd`.
 
-**Movimiento:** click-to-move, snap a grid de 1.5u. `stats.speed` = walk, `stats.speed * 1.114` = run (reducido 20%).
-**Anti-stuck:** si el jugador no avanza ≥0.5u/s durante 0.35s, `moving = false` automático.
-**Separación de obstáculos:** `_separation_force()` empuja al jugador lejos de mobs/players remotos en radio 2.2u. También tiene `NavigationAgent3D` listo para cuando se bake la navmesh.
+**Movimiento:** click-to-move, snap a grid de 0,75 m. `stats.speed` = walk, `stats.speed * 1.114` = run (reducido 20%).
+**Anti-stuck:** si el jugador no avanza ≥0,25 m/s durante 0.35s, `moving = false` automático.
+**Separación de obstáculos:** `_separation_force()` empuja al jugador lejos de mobs/players remotos en radio 1,1 m. También tiene `NavigationAgent3D` listo para cuando se bake la navmesh.
 **Stamina:** drena 10/s corriendo, regenera 100pts cada 5s.
 **HP:** regenera 1pt cada 5s (timer se reinicia al recibir daño).
-**Rango de ataque:** 2.5u. Kiting cancela el slash (excepto E).
+**Rango de ataque:** 1,25 m. Kiting cancela el slash (excepto E).
 **Chain attack:** si el botón queda apretado al terminar el slash, re-ataca automático.
 **Muerte:** invisible, respawn en 3s en última posición segura.
 **Level UP:** al subir de nivel aparece Label3D "Level UP!" amarillo sobre la cabeza, sube y desaparece (hijo del player para seguirlo en movimiento). En multijugador se replica a todos via `_rpc_show_levelup.rpc()` — todos los peers ven el cartel sobre el jugador que subió de nivel.
@@ -134,7 +135,7 @@ Resource en `systems/stats/character_stats.gd`. Se instancia en `player._ready()
 | Ataque básico | — | `stats.attack * 10.0` |
 | Q | 6s | Carga espada. Próximo ataque = `stats.attack * 15.0`. Hit a 15% de la anim. |
 | W | 10s | Escudo 4s, absorbe todo el daño. |
-| E | 7s, 2 cargas | Dash 9.6u + Jump Attack. Daño = `stats.attack * 12.0` en radio 1.8u. No cancelable. |
+| E | 7s, 2 cargas | Dash 4,8 m + Jump Attack. Daño = `stats.attack * 12.0` en radio 0,9 m. No cancelable. |
 
 **Animaciones Mixamo** (`assets/characters/PlayerCharacterLongsword/`):
 `Idle.fbx`, `Walking.fbx`, `Running.fbx` (In Place), `Great Sword Slash.fbx` (1.5x speed), `Great Sword Jump Attack.fbx` (root motion XZ eliminado en `_fix_root_motion()`, Y preservado).
@@ -172,7 +173,7 @@ BaseEnemy → AnimatedEnemy → MeleeEnemy → GoblinEnemy
 - `_on_damaged(amount)` — hook para subclases (fases, enrage, gritos)
 - `_get_sync_anim()` / `_apply_sync_anim()` — animación en multijugador
 
-**Caída del mapa:** por debajo de `VOID_Y = -30` el enemigo se descarta solo con
+**Caída del mapa:** por debajo de `VOID_Y = -15` el enemigo se descarta solo con
 `_despawn_por_caida()`. **No es una muerte**: no da XP, no dispara el estallido y no
 suma bajas — solo libera el cupo. Sin esto, un enemigo cayendo al vacío queda vivo
 para siempre en el grupo `enemy` y ahoga al spawner, que nunca vuelve a bajar de su
@@ -211,7 +212,7 @@ tope de vivos.
 - El jugador local se agrega al grupo `player_local` en `world.gd`. Remotos van a `player_remote`.
 - Escala a N jugadores sin cambios.
 
-**Goblin** (`enemies/goblin/`): HP 50, speed 3.5, detección 10u, ataque 2.0u cada 1.5s, XP 120. Animaciones: Idle, Walking, Swiping. Golpe conecta al 45% de la animación de swipe.
+**Goblin** (`enemies/goblin/`): HP 50, speed 1,75 m/s, detección 5 m, ataque 1,25 m cada 1.5s, XP 120. Animaciones: Idle, Walking, Swiping. Golpe conecta al 45% de la animación de swipe.
 
 Para agregar enemigo nuevo: crear carpeta en `enemies/`, extender `BaseEnemy`, sobreescribir vars en `_ready()` antes de `super._ready()`, agregar `State.PATROL` en el match de animaciones.
 
@@ -286,7 +287,7 @@ textura, volumen e iluminación, solo cambia de color.
 **WaveManager** (`systems/wave_manager.gd`, grupo `wave_manager`):
 - `spawn_alerted = true` → nacen en `APPROACH`, van hacia el jugador **ignorando
   `detection_range`**. El `spawn_radius` solo define cuánto tardan en llegar.
-- `spawn_alerted = false` → nacen en `PATROL` con área propia de 12×12 y solo
+- `spawn_alerted = false` → nacen en `PATROL` con área propia de 6×6 m y solo
   reaccionan al entrar en `detection_range`. Ahí el `spawn_radius` **sí** importa
   y el mapa (esquinas, líneas de visión) pasa a ser mecánica.
 - Nunca spawnea sin suelo: prueba `INTENTOS_SPAWN = 8` ángulos con raycast hacia
@@ -303,11 +304,7 @@ esquinas y techos. Ver `casa_01.tscn` como referencia de encastre.
 **Medidas del kit:** muros 2,00 × 3,12 m (centrados en X, base en Y=0) · piso 2 × 2 m
 · `Roof_RoundTiles_6x6` cubre 8,24 m con aleros, hecho para una planta de 6 × 6.
 
-**Escala:** el pack está en escala real correcta; **el personaje está sobredimensionado**
-(su cápsula dice 1,80 m pero el modelo se ve como 3,50). Se compensa escalando el
-mundo ×2 — `casa_01.tscn` tiene `scale = 2` en su raíz. **Deuda técnica**: lo correcto
-sería achicar el personaje y recalibrar `TILE_SIZE`, rango de ataque y distancia de
-cámara de una vez.
+**Escala: 1 u = 1 m.** Ver §Escala más abajo: hasta el 2026-09-14 el mundo iba ×2.
 
 **Suelo:** un `PlaneMesh` grande con textura tileada como base, y encima:
 - **Decals** (`parche_*.tscn`) para manchas y transiciones — no dan z-fighting
@@ -326,31 +323,39 @@ luces cálidas. Un ambiente gris parejo aplasta la geometría. `tonemap_mode`: u
 
 **Spawn del jugador:** un `Marker3D` llamado exactamente **`PlayerSpawn`** en la raíz
 de la escena. `world.gd → _spawn_origin()` lo busca por nombre; sin él cae en la
-constante `SPAWN_ORIGIN`. Ponerlo con `Y = 2` para que el personaje apoye bien.
+constante `SPAWN_ORIGIN`. Ponerlo con `Y = 1` para que el personaje apoye bien.
 
 ## La arena (`arena.tscn` + `arena_pruebas.tscn`)
 
 El mapa del juego que describe `DESIGN.md` §15.11b: **1v1, gana el que mate al
 boss o al otro tres veces.** La planta no es decoración, sale de esa regla.
 
-**200×200, origen al centro, jugable hasta ±97.** No hace falta que sea más
-grande: con la cámara en brazo 5–20 ves ~40 unidades, así que de punta a punta
-ya son ~40 segundos caminando. El problema del pueblo viejo era estar **vacío**,
+**100×100 m, origen al centro, jugable hasta ±48,5.** No hace falta que sea más
+grande: con la cámara en brazo 2,5–10 ves ~27 m de ancho, así que de punta a
+punta ya son ~40 segundos caminando. El problema del pueblo viejo era estar **vacío**,
 no ser chico.
 
 | Zona | Qué es | Qué produce |
 |---|---|---|
-| **Plaza del boss** (±24) | Amurallada, 4 entradas de 16, cuatro faroles de energía 6 | El **único** lugar iluminado y sin cobertura. Pegarle al boss te expone, que es la regla de §15.11b hecha de luz |
-| **Anillo** | 12 casas, callejones, faroles tenues (energía 2.2) | Oscuro y seguro. Farmeás tranquilo, pero cada segundo ahí el otro le pega al boss |
+| **Plaza del boss** (±12) | Amurallada, 4 entradas de 8 m, cuatro faroles de energía 6 | El **único** lugar iluminado y sin cobertura. Pegarle al boss te expone, que es la regla de §15.11b hecha de luz |
+| **Anillo** | 12 casas (**a media escala**, ver abajo), callejones, faroles tenues (energía 2.2) | Oscuro y seguro. Farmeás tranquilo, pero cada segundo ahí el otro le pega al boss |
 | **Diagonal SO↔NE** | Despejada, pasa por la plaza | La ruta rápida entre spawns y la línea de visión larga: los momentos de "ahí está" |
-| **Barreras** (±97) | 4 `StaticBody3D` invisibles de 24 de alto | Contención. Ver la trampa del raycast más abajo |
+| **Barreras** (±48,5) | 4 `StaticBody3D` invisibles de 12 de alto | Contención. Ver la trampa del raycast más abajo |
 
 **La regla de la diagonal está en el generador, no puesta a ojo:** ninguna casa
-ni árbol se coloca con `|z − x| < 16`. Si agregás props, respetala o la ruta
+ni árbol se coloca con `|z − x| < 8`. Si agregás props, respetala o la ruta
 rápida deja de existir.
 
+> **Bug heredado: las 12 casas del anillo están a la MITAD del tamaño real**
+> (puertas de 1 m al lado de un personaje de 1,5). En el mundo ×2 se colocaban
+> con escala 1, y el `transform` de una instancia **reemplaza** al de la raíz de
+> la escena instanciada: el ×2 de `casa_01` nunca se aplicaba. La migración a
+> metros lo preservó a propósito (`CASA_ESCALA = 0.5` en el generador) para no
+> cambiar el juego. Pasarlas a 1.0 duplica su tamaño y dos pares se pisan
+> ((24,-8) con (29,-14), por ejemplo): hay que reubicarlas antes.
+
 **Spawns:** dos `Marker3D` en el grupo `player_spawn`, en vértices opuestos
-(±80). `world.gd → _spawn_origin(idx)` los ordena **por nombre casteado a
+(±40). `world.gd → _spawn_origin(idx)` los ordena **por nombre casteado a
 String** y le da uno a cada jugador. Sin grupo cae al viejo `PlayerSpawn` único,
 así que `pruebas.tscn` sigue andando igual que antes.
 
@@ -361,7 +366,7 @@ alrededor del jugador — son sistemas distintos y conviven (ver §Spawners).
 **Iluminación: es mecánica, no adorno.** `DESIGN.md` §6 lo tiene `[DECIDIDO]`:
 con visión limitada dos jugadores alcanzan para llenar un mapa; a plena luz
 hacen falta diez. Los números que quedaron: ambiente 0.07, sol → luna (energía
-0.22, azul), y **la niebla de 45 a 120** en vez de 90 a 190. Esa última es la que
+0.22, azul), y **la niebla de 22,5 a 60 m** en vez de 45 a 95. Esa última es la que
 recorta la visión de verdad; las otras dos son atmósfera.
 
 > **Falta el navmesh.** Ahora hay muros de verdad que rodear y ni el jugador ni
@@ -456,7 +461,7 @@ la franja), y en `longsword.gd` el piso del `clampf` y el argumento de `camera_s
   **Para agregarle un nodo a una escena existente desde afuera, editar el `.tscn`
   como TEXTO.** Un diff sano de esa operación es puramente aditivo.
 - **Un muro de colisión más alto que la cámara rompe el click-to-move.** La cámara
-  iso vuela a `y ≈ 17`; las barreras de la arena miden 24, así que la cámara queda
+  iso vuela a `y ≈ 8,5`; las barreras de la arena miden 12, así que la cámara queda
   **dentro** del muro y cada click hacia el centro pega en su cara interna —que está
   detrás del jugador—. El personaje sale corriendo para atrás, clickees donde
   clickees. Las barreras van al grupo `barrera` y `world.gd → _raycast()` las
@@ -476,7 +481,7 @@ la franja), y en `longsword.gd` el piso del `clampf` y el argumento de `camera_s
   sin warp, que vale 0 en la zona lisa.
 
 ## Cámara (`shared/iso_camera.gd`)
-Isométrica. Pitch −30° a −80° (default −60°), yaw libre con click medio. Zoom ARM 5–20 (arranca en 20).
+Isométrica. Pitch −30° a −80° (default −60°), yaw libre con click medio. Zoom ARM 2,5–10 m (arranca en 10).
 
 **`shake(amount, duration)`** — sacudón de impacto, lo dispara `CombatFeedback.camera_shake()`.
 Tres cosas que no son obvias:
@@ -724,18 +729,18 @@ WebGL 2.0 en Chrome sin un solo error de consola**. Cuesta +1,71 MB en el `.pck`
 > lo que lo mató, no el terreno en sí.
 
 **Configuración actual** (nodo `Terreno` en la escena jugable): 513×513 vértices,
-`map_scale (2,1,2)` = 1024 unidades de lado, `centered = true`, colisión activada,
+`map_scale (1,1,1)` = 512 m de lado, `centered = true`, colisión activada,
 shader `Classic4Lite`, `u_ground_uv_scale = 12`. Los datos pesan 1,2 MB.
 
-**El terreno rodea al pueblo, no lo reemplaza.** Queda liso y a `y = -0.35` bajo
+**El terreno rodea al pueblo, no lo reemplaza.** Queda liso y a `y = -0.175` bajo
 la arena (así el adoquín y las casas siguen apoyando igual) y sube en lomas hacia
 afuera. `tools/generar_terreno.gd` lo genera; las perillas están arriba del
 archivo.
 
 **El perfil usa distancia al BORDE CUADRADO** (`max(|x|,|z|)`), no radial. Con
 distancia al centro habría que dejar liso hasta 141 —la esquina del plano de
-200×200— y las lomas quedaban tan lejos que el jugador, que ve unas 40 unidades,
-no las veía nunca. Con el borde cuadrado arrancan a 104, justo pasado el adoquín.
+100×100— y las lomas quedaban tan lejos que el jugador, que ve unos 27 m,
+no las veía nunca. Con el borde cuadrado arrancan a 52, justo pasado el adoquín.
 
 ### Cuatro cosas de HTerrain que no son obvias
 
@@ -756,7 +761,49 @@ no las veía nunca. Con el borde cuadrado arrancan a 104, justo pasado el adoqu�
 > binarios). `base_enemy.gd` y `enemy_pit.gd` ya lo toleran: chequean
 > `if _terrain and is_instance_valid(_terrain)` y caen a física normal si no está.
 
-## Mesa de trabajo (rama `mesa-de-trabajo`, 2026-09-14)
+## Escala — 1 u = 1 m (desde 2026-09-14)
+
+**Todo el proyecto está en metros.** Lo que se modele en Blender en metros entra
+tal cual, sin conversión.
+
+**Por qué hizo falta:** el primer commit (24/08) puso `scale = Vector3(2, 2, 2)` en
+el `_ready()` del Longsword, **sobre el cuerpo físico entero**. De ahí en más todo
+se fue calibrando contra ese ×2: los goblins heredaron `body_scale = 2`, las casas
+del kit se escalaron ×2 para no quedar chicas al lado del personaje, y el cartel
+de nivel llevaba `scale = 0.5` para *deshacerlo*. El juego vivía en una unidad que
+nadie declaró: **1 u = 0,5 m**.
+
+**Cómo se migró:** se dividió **todo** por 2 de manera pareja — distancias,
+velocidades, gravedad, rangos, cámara, mapas, terreno, pasto — para que el juego
+se vea y se sienta **idéntico**. Verificado, no deducido, con
+`tools/medir_escala.tscn` corriendo antes y después: **las 35 medidas dieron
+exactamente ×0,500** (velocidad real, largo del dash, alcance contra un goblin,
+ancho visible de la cámara, alturas de cápsulas y barras) y las fotos del mismo
+encuadre salieron iguales. Como velocidad y distancia bajan juntas, **los tiempos
+no cambian**: cruzar la arena tarda lo mismo. También pasaron `test_arena` (72/72
+cerrado) y dos instancias por red.
+
+**El personaje mide 1,76 m** en pose de reposo (1,51 m en el idle agachado de
+combate) y el goblin 1,69. Una puerta del kit mide 2,10.
+
+**Reglas para que no vuelva a pasar:**
+- **Nunca `scale` en la raíz de un `CharacterBody3D`.** Arrastra a la cápsula y a
+  todo lo que se le cuelgue, y Godot no garantiza el comportamiento de cuerpos
+  físicos escalados. Para un enemigo más grande está `body_scale`, que agranda
+  **el modelo y la cápsula** (`AnimatedEnemy._aplicar_body_scale()`).
+- **La cápsula se duplica antes de agrandarla:** el recurso es compartido entre
+  todas las instancias y se agrandaría una vez más por cada goblin.
+- **El alto antes que el radio.** Godot no deja un radio mayor que medio alto y
+  corrige el alto solo: agrandando primero el radio, el alto se multiplica dos
+  veces. Pasó en la migración: el boss salió con una cápsula de 28,8 m.
+- **El `transform` de una instancia REEMPLAZA al de la raíz** de la escena
+  instanciada. Una escala puesta en la raíz de `casa_01.tscn` desaparece en cuanto
+  alguien la coloca con su propio transform. Así nacieron las casas a media escala
+  de la arena (ver §La arena).
+- **Para cualquier cambio que toque tamaños:** correr `tools/medir_escala.tscn`
+  antes y después, y comparar.
+
+## Mesa de trabajo (2026-09-14)
 
 Para **aprender** a hacer mapas, no para producir. Guido viene de Unreal (Modeling
 Mode + Landscape) y en Godot no hay nada equivalente de fábrica.
@@ -839,6 +886,9 @@ cualquier plugin:
       Verificar con UNA pared que el goblin la rodea antes de construir más mapa.
 - [ ] Colisión para las piezas del kit: importan con **cero** colisión (0 de 198).
       `casa_01.tscn` tiene 14 `CollisionShape3D` puestos a mano. Automatizable.
+- [x] **Escala real, 1 u = 1 m** (2026-09-14). Ver §Escala
+- [ ] **Casas del anillo a tamaño real**: hoy están a media escala (bug heredado,
+      ver §La arena). Subir `CASA_ESCALA` a 1.0 y reubicar las que se pisan
 - [ ] Variedad de casas: las 12 de la arena son todas `casa_01` y se nota. Quedan
       170 piezas del kit sin usar (voladizos, escaleras, balcones, cercas)
 

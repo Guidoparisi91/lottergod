@@ -232,7 +232,8 @@ La planta sale directamente de dos reglas que ya estaban escritas acá:
   la visión de verdad; el ambiente y la luna son atmósfera.
 
 **Lo que aprendimos midiendo, y corrige una intuición de este documento:** con la
-cámara en brazo 5–20 ves ~40 unidades y el mapa mide 200×200, así que **los dos
+cámara en brazo 5–20 ves ~40 unidades y el mapa mide 200×200 (en metros, desde el
+14/09: brazo 2,5–10, ~27 m y 100×100 — misma proporción), así que **los dos
 jugadores ya son invisibles entre sí casi todo el tiempo sin que construyamos
 nada.** El problema de diseño no era agregar escondites — es el inverso:
 **controlar cuándo sí se ven.** Por eso importan más las líneas de visión largas

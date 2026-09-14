@@ -1,8 +1,8 @@
 extends Camera3D
 
-const ARM_MIN      = 5.0
-const ARM_MAX      = 20.0
-const ARM_SPEED    = 1.0
+const ARM_MIN      = 2.5
+const ARM_MAX      = 10.0
+const ARM_SPEED    = 0.5
 const PITCH_MIN    = -80.0
 const PITCH_MAX    = -30.0
 const PITCH_SPEED  = 0.3
@@ -40,7 +40,7 @@ func _process(delta: float):
 
 ## Sacudon de impacto. Lo dispara CombatFeedback.camera_shake().
 ## `amount` es la amplitud en unidades de mundo; `duration`, cuanto tarda en morir.
-func shake(amount: float = 0.25, duration: float = 0.18):
+func shake(amount: float = 0.125, duration: float = 0.18):
 	# No acumula: un golpe fuerte pisa a uno flojo, pero dos flojos no suman uno
 	# fuerte. Si se sumaran, una rafaga de golpes chicos te marea la pantalla.
 	# Escalado por zoom: el shake esta en unidades de MUNDO, asi que el mismo

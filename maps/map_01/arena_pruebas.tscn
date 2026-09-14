@@ -42,15 +42,14 @@ fog_light_color = Color(0.05, 0.06, 0.11, 1)
 fog_density = 0.0
 fog_sky_affect = 0.0
 fog_depth_curve = 2.0
-fog_depth_begin = 45.0
-fog_depth_end = 120.0
+fog_depth_begin = 22.5
+fog_depth_end = 60.0
 
 [node name="World" type="Node3D" unique_id=305143245]
 script = ExtResource("world_script")
 
 [node name="Terreno" type="Node3D" parent="." unique_id=1100582611]
 script = ExtResource("hterrain_script")
-map_scale = Vector3(2, 1, 2)
 centered = true
 _terrain_data = ExtResource("terreno_data")
 chunk_size = 32
@@ -74,7 +73,7 @@ light_color = Color(0.62, 0.72, 1, 1)
 shadow_enabled = true
 shadow_blur = 2.0
 directional_shadow_blend_splits = true
-directional_shadow_max_distance = 256.0
+directional_shadow_max_distance = 128.0
 
 [node name="IsoCamera" type="Camera3D" parent="." unique_id=59859658]
 script = ExtResource("camera_script")
@@ -87,53 +86,53 @@ script = ExtResource("camera_script")
 script = ExtResource("wave_script")
 enemy_scene = ExtResource("goblin")
 min_spawn_interval = 0.6
-spawn_radius_min = 25.0
-spawn_radius_max = 35.0
+spawn_radius_min = 12.5
+spawn_radius_max = 17.5
 max_alive_base = 8
 max_alive_per_wave = 2
 spawn_alerted = false
 
 [node name="GoblinKing" parent="." unique_id=68277092 instance=ExtResource("boss")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-body_scale = 6.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+body_scale = 3.0
 body_tint = Color(0.3491902, 0.025840001, 0.050708726, 0.48200002)
-speed = 4.0
+speed = 2.0
 
 [node name="PlayerSpawn0" type="Marker3D" parent="." groups=["player_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80.0, 2, -80.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.0, 1, -40.0)
 
 [node name="PlayerSpawn1" type="Marker3D" parent="." groups=["player_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.0, 2, 80.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.0, 1, 40.0)
 
 [node name="NidoNoroeste" type="Node3D" parent="." groups=["enemy_pit"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60.0, 0, 60.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.0, 0, 30.0)
 script = ExtResource("pit_script")
 enemy_scene = ExtResource("goblin")
 max_enemies = 5
-patrol_size = Vector2(18, 18)
+patrol_size = Vector2(9, 9)
 spawn_interval = 6.0
 
 [node name="NidoSudeste" type="Node3D" parent="." groups=["enemy_pit"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.0, 0, -60.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.0, 0, -30.0)
 script = ExtResource("pit_script")
 enemy_scene = ExtResource("goblin")
 max_enemies = 5
-patrol_size = Vector2(18, 18)
+patrol_size = Vector2(9, 9)
 spawn_interval = 6.0
 
 [node name="NidoOeste" type="Node3D" parent="." groups=["enemy_pit"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -74.0, 0, -14.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.0, 0, -7.0)
 script = ExtResource("pit_script")
 enemy_scene = ExtResource("goblin")
 max_enemies = 4
-patrol_size = Vector2(18, 18)
+patrol_size = Vector2(9, 9)
 spawn_interval = 6.0
 
 [node name="NidoEste" type="Node3D" parent="." groups=["enemy_pit"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.0, 0, 14.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.0, 0, 7.0)
 script = ExtResource("pit_script")
 enemy_scene = ExtResource("goblin")
 max_enemies = 4
-patrol_size = Vector2(18, 18)
+patrol_size = Vector2(9, 9)
 spawn_interval = 6.0
 

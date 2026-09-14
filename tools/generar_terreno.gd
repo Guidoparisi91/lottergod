@@ -2,25 +2,29 @@ extends SceneTree
 
 # Genera el terreno HTerrain del pueblo y lo mete en pruebas.tscn.
 #
-# El pueblo vive sobre un plano de 200x200 centrado en el origen. La idea NO es
+# Todo en METROS desde 2026-09-14 (antes el mundo iba x2: si comparas con
+# commits viejos, distancias y alturas eran el doble y el ruido la mitad de fino).
+#
+# El pueblo vive sobre un plano de 100x100 centrado en el origen. La idea NO es
 # reemplazarlo: es rodearlo. El terreno queda liso bajo el pueblo (para que el
 # adoquin y las casas sigan apoyando igual) y sube en lomas hacia afuera, asi
 # el mapa deja de terminar en un borde recto contra el vacio.
 
 const RES        := 513                          # 513 vertices...
-const ESCALA     := 2.0                          # ...x2 unidades = 1024 de lado
+const ESCALA     := 1.0                          # ...a 1 m = 512 m de lado
 const DIR        := "res://maps/map_01/terreno"
 const ESCENA     := "res://maps/map_01/pruebas.tscn"
 
 # Ojo: NO es distancia al centro, es distancia al BORDE del cuadrado del pueblo
-# (max(|x|,|z|)). Con distancia radial habria que dejar liso hasta 141 —la esquina
-# del plano de 200x200— y las lomas quedaban tan lejos que el jugador, que ve unas
-# 40 unidades, no las veia nunca. Asi arrancan apenas pasado el adoquin.
-const BORDE_LISO  := 104.0   # el plano llega a 100: 4 de margen
-const BORDE_LOMAS := 260.0
-const ALTURA      := 38.0
-const DEFORME     := 55.0    # cuanto se deforma el borde para que no sea un circulo
-const BASE_Y      := -0.35   # apenas debajo del adoquin, para no pelear en z
+# (max(|x|,|z|)). Con distancia radial habria que dejar liso hasta 71 —la esquina
+# del plano de 100x100— y las lomas quedaban tan lejos que el jugador, que ve unos
+# 20 m, no las veia nunca. Asi arrancan apenas pasado el adoquin.
+const BORDE_LISO  := 52.0    # el plano llega a 50: 2 de margen
+const BORDE_LOMAS := 130.0
+const ALTURA      := 19.0
+const DETALLE     := 3.5     # altura extra del ruido fino
+const DEFORME     := 27.5    # cuanto se deforma el borde para que no sea un circulo
+const BASE_Y      := -0.175  # apenas debajo del adoquin, para no pelear en z
 
 const TEX_PASTO  := "res://assets/Textures/Pasto/Grass004_1K-PNG_Color.png"
 const TEX_TIERRA := "res://assets/Textures/Tierra/tierra_base.png"
@@ -36,17 +40,17 @@ func _init() -> void:
 	# perfectamente circular y se lee como un bug, no como un valle.
 	var forma := FastNoiseLite.new()
 	forma.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	forma.frequency = 0.0035
+	forma.frequency = 0.007
 	forma.fractal_octaves = 3
 
 	var detalle := FastNoiseLite.new()
 	detalle.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	detalle.frequency = 0.011
+	detalle.frequency = 0.022
 	detalle.fractal_octaves = 3
 
 	var deforme := FastNoiseLite.new()
 	deforme.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	deforme.frequency = 0.0026
+	deforme.frequency = 0.0052
 	deforme.seed = 7
 
 	var alturas := PackedFloat32Array()
@@ -69,7 +73,7 @@ func _init() -> void:
 			var t := 0.0 if base <= BORDE_LISO else smoothstep(BORDE_LISO, BORDE_LOMAS, d)
 			var n := forma.get_noise_2d(wx, wz) * 0.5 + 0.5        # -> 0..1
 			var dt := detalle.get_noise_2d(wx, wz) * 0.5 + 0.5
-			alturas[z * RES + x] = BASE_Y + t * (ALTURA * n + 7.0 * dt)
+			alturas[z * RES + x] = BASE_Y + t * (ALTURA * n + DETALLE * dt)
 
 	var img := data.get_image(HTerrainData.CHANNEL_HEIGHT)
 	for z in RES:

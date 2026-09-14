@@ -6,14 +6,14 @@ extends CharacterBody3D
 
 signal died(killer_id: int)
 
-const GRAVITY = -20.0
+const GRAVITY = -10.0
 ## Por debajo de esta altura el enemigo se considera caído del mapa y se descarta.
-const VOID_Y  = -30.0
+const VOID_Y  = -15.0
 
 @export var max_hp:        float = 5.0
-@export var speed:         float = 3.5
-@export var detection_range: float = 10.0
-@export var attack_range:  float = 1.5
+@export var speed:         float = 1.75
+@export var detection_range: float = 5.0
+@export var attack_range:  float = 0.75
 @export var attack_damage: float = 1.0
 @export var attack_cooldown: float = 1.5
 @export var xp_reward:     int   = 10
@@ -52,17 +52,18 @@ var hp_fill: MeshInstance3D = null
 ## Separación entre la cabeza del modelo y la barra, en metros. La altura de la
 ## cabeza se mide sola del AABB, así que este número NO hay que retocarlo al
 ## cambiar `body_scale`: un valor chico sirve para un goblin y para un boss.
-@export var hp_bar_height: float = 0.5
+@export var hp_bar_height: float = 0.25
 var _alto_cabeza_cache: float = 0.0
-## Escala de la barra de HP en unidades de mundo (la barra es top_level, así que
-## NO hereda el `scale` del enemigo: un boss grande necesita subirla a mano).
+## Multiplicador del tamaño de la barra de HP, que de base mide 0,5 × 0,06 m. La
+## barra es top_level, así que NO crece con `body_scale`: un boss grande necesita
+## subirla a mano.
 @export var hp_bar_scale: float = 1.0
 
 enum State { IDLE, PATROL, CHASE, APPROACH }
 var state = State.IDLE
 
 @export var approach_speed_mult: float = 2.5
-@export var approach_distance:   float = 30.0
+@export var approach_distance:   float = 15.0
 
 ## Velocidad de giro, en radianes por segundo aproximados. Los bosses grandes van
 ## bajo (4–6): un jefe pesado que gira como un trompo no se lee como pesado, y
@@ -71,7 +72,7 @@ var state = State.IDLE
 ## Segundos que lleva con el ataque listo sin poder encarar. Acelera el giro.
 var _espera_de_giro: float = 0.0
 
-@export var patrol_size: Vector2 = Vector2(6.0, 6.0)
+@export var patrol_size: Vector2 = Vector2(3.0, 3.0)
 var spawn_position: Vector3 = Vector3.ZERO
 var patrol_target:  Vector3 = Vector3.ZERO
 var patrol_idle_timer: float = 0.0
@@ -182,7 +183,7 @@ func _physics_process(delta: float):
 		State.APPROACH:
 			_approach_to_player(delta)
 
-	if knockback_velocity.length() > 0.1:
+	if knockback_velocity.length() > 0.05:
 		velocity.x = knockback_velocity.x
 		velocity.z = knockback_velocity.z
 		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, delta * 8.0)
@@ -190,7 +191,7 @@ func _physics_process(delta: float):
 		knockback_velocity = Vector3.ZERO
 
 	var _pos_previa := global_position
-	if state != State.IDLE or not is_on_floor() or knockback_velocity.length() > 0.1:
+	if state != State.IDLE or not is_on_floor() or knockback_velocity.length() > 0.05:
 		move_and_slide()
 
 	# Anti-empujón: descuenta el desplazamiento que NO vino de su propia velocidad.
@@ -201,7 +202,7 @@ func _physics_process(delta: float):
 		var real:     Vector3 = global_position - _pos_previa
 		real.y = 0.0
 		var exceso: Vector3 = real - esperado
-		if exceso.length() > 0.0005:
+		if exceso.length() > 0.00025:
 			global_position -= exceso * push_resistance
 
 	# Snap Y al terreno después de move_and_slide() — sin depender de chunks de física.
@@ -243,7 +244,7 @@ func _move_to_patrol_target(delta: float):
 	var diff = patrol_target - global_position
 	# Solo XZ: el Y del enemy siempre difiere del patrol_target.y por el terrain snap.
 	var dist = Vector2(diff.x, diff.z).length()
-	if dist < 0.5:
+	if dist < 0.25:
 		patrol_idle_timer = randf_range(2.0, 5.0)
 		state = State.IDLE
 		velocity.x = 0
@@ -343,7 +344,7 @@ func _chase_and_attack(delta: float):
 	var target = _get_surround_target()
 	var dir    = target - global_position
 	dir.y = 0
-	if dir.length() < 0.1:
+	if dir.length() < 0.05:
 		dir = player.global_position - global_position
 		dir.y = 0
 	dir = dir.normalized()
@@ -373,14 +374,14 @@ func _get_surround_target() -> Vector3:
 	var angle       = my_angle + slot_offset * 0.4
 
 	# Radio que crece con la cantidad de enemigos pero nunca supera attack_range
-	var min_r = total * 1.0 / PI
+	var min_r = total * 0.5 / PI
 	var r     = clamp(min_r, attack_range * 0.5, attack_range * 0.92)
 
 	return player.global_position + Vector3(sin(angle) * r, 0.0, cos(angle) * r)
 
 func _enemy_separation_force() -> Vector3:
 	var force      = Vector3.ZERO
-	var sep_radius = 2.8
+	var sep_radius = 1.4
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if e == self:
 			continue
@@ -526,7 +527,7 @@ func _create_hp_bar():
 
 	var bg = MeshInstance3D.new()
 	var bg_mesh = BoxMesh.new()
-	bg_mesh.size = Vector3(1.0, 0.12, 0.01)
+	bg_mesh.size = Vector3(0.5, 0.06, 0.005)
 	bg.mesh = bg_mesh
 	var bg_mat = StandardMaterial3D.new()
 	bg_mat.albedo_color = Color(0.15, 0.15, 0.15)
@@ -539,9 +540,9 @@ func _create_hp_bar():
 
 	hp_fill = MeshInstance3D.new()
 	var fill_mesh = BoxMesh.new()
-	fill_mesh.size = Vector3(1.0, 0.12, 0.01)
+	fill_mesh.size = Vector3(0.5, 0.06, 0.005)
 	hp_fill.mesh = fill_mesh
-	hp_fill.position.z = -0.006
+	hp_fill.position.z = -0.003
 	var fill_mat = StandardMaterial3D.new()
 	fill_mat.albedo_color = Color(0.2, 0.9, 0.2)
 	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -555,7 +556,7 @@ func _update_hp_bar():
 		return
 	var pct = current_hp / max_hp
 	hp_fill.scale.x = pct
-	hp_fill.position.x = (pct - 1.0) * 0.5
+	hp_fill.position.x = (pct - 1.0) * 0.25
 
 	var barra: Node3D = $HPBar
 	barra.global_position = global_position + Vector3(0, _alto_cabeza() + hp_bar_height, 0)

@@ -7,7 +7,7 @@ extends Node3D
 
 @export var enemy_scene:    PackedScene
 @export var max_enemies:    int     = 5
-@export var patrol_size:    Vector2 = Vector2(10.0, 10.0)
+@export var patrol_size:    Vector2 = Vector2(5.0, 5.0)
 @export var spawn_interval: float   = 5.0
 
 var _player:     Node3D         = null
@@ -109,13 +109,13 @@ func _random_spawn_pos() -> Vector3:
 		ref_y = _player.global_position.y
 	var space = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
-		Vector3(base.x, ref_y + 200.0, base.z),
-		Vector3(base.x, ref_y - 100.0, base.z)
+		Vector3(base.x, ref_y + 100.0, base.z),
+		Vector3(base.x, ref_y - 50.0, base.z)
 	)
 	var hit = space.intersect_ray(query)
 	if hit:
-		return hit.position + Vector3.UP * 0.5
-	return Vector3(base.x, ref_y + 2.0, base.z)
+		return hit.position + Vector3.UP * 0.25
+	return Vector3(base.x, ref_y + 1.0, base.z)
 
 func _do_spawn(pos: Vector3, eid: int):
 	if not enemy_scene:
