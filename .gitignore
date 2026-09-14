@@ -8,3 +8,6 @@
 
 # ZIPs de packs de assets (se descomprimen, no se versionan)
 *.zip
+
+# Acceso directo a Godot: tiene rutas absolutas de esta maquina
+*.lnk

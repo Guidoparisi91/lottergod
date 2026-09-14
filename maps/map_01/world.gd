@@ -27,6 +27,7 @@ func _ready():
 
 	_setup_atmosphere()
 	_create_cursors()
+	_cachear_barreras()
 
 	if not NetworkManager.multiplayer_mode:
 		_spawn_player(1)
@@ -37,10 +38,29 @@ func _ready():
 
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
-## Punto de aparición del jugador. Si la escena tiene un nodo llamado
-## "PlayerSpawn" (un Marker3D alcanza), manda su posición — así el spawn se
-## mueve visualmente en el editor. Sin ese nodo, cae en SPAWN_ORIGIN.
-func _spawn_origin() -> Vector3:
+## Punto de aparición del jugador, por índice de jugador.
+##
+## Busca primero los marcadores del grupo "player_spawn" (los ordena por nombre,
+## así "PlayerSpawn0" y "PlayerSpawn1" quedan estables entre peers: si el orden
+## dependiera del árbol, cada máquina podría asignarlos distinto y los dos
+## jugadores aparecerían en el mismo vértice). Es lo que usa la arena, donde
+## cada uno nace en una punta.
+##
+## Si no hay grupo, cae al viejo nodo único "PlayerSpawn" — así `pruebas.tscn`
+## sigue funcionando igual que antes. Y sin ninguno de los dos, a SPAWN_ORIGIN.
+func _spawn_origin(idx: int = 0) -> Vector3:
+	var marcas := get_tree().get_nodes_in_group("player_spawn")
+	if not marcas.is_empty():
+		# String(), no StringName: comparar dos StringName con "<" en Godot NO
+		# ordena alfabeticamente, compara por hash interno. Sin el cast el orden
+		# sale arbitrario y estable-por-run, que es peor que aleatorio: parece
+		# que anda hasta que un peer asigna distinto y los dos jugadores nacen
+		# en el mismo vertice.
+		marcas.sort_custom(func(a, b): return String(a.name) < String(b.name))
+		var m := marcas[clampi(idx, 0, marcas.size() - 1)] as Node3D
+		if m != null:
+			return m.global_position
+
 	var marca := get_node_or_null("PlayerSpawn")
 	if marca is Node3D:
 		return (marca as Node3D).global_position
@@ -62,7 +82,11 @@ func _spawn_player(peer_id: int):
 	p.set_multiplayer_authority(peer_id)
 
 	var idx       = NetworkManager.connected_peers.find(peer_id)
-	var spawn_pos = _spawn_origin() + Vector3(max(0, idx) * 2.0, 0.0, 0.0)
+	# Con marcadores propios cada jugador ya tiene su punta: no hay que
+	# correrlo al costado. El desplazamiento solo aplica al spawn único.
+	var spawn_pos = _spawn_origin(max(0, idx))
+	if get_tree().get_nodes_in_group("player_spawn").is_empty():
+		spawn_pos += Vector3(max(0, idx) * 2.0, 0.0, 0.0)
 	p.position    = spawn_pos
 
 	add_child(p)
@@ -312,12 +336,32 @@ func _update_cursor():
 	var tex = cursor_enemy if over_enemy else cursor_normal
 	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, Vector2(12, 12))
 
+## Los muros invisibles que cierran la arena son SOLIDOS para caminar pero
+## INVISIBLES para el click. Hace falta separarlo: la cámara vuela a unos 17 de
+## altura y el muro mide 24, así que la cámara queda dentro del muro y cada
+## click hacia el centro del mapa pega en su cara interna —que está detrás del
+## jugador—. El personaje sale corriendo para atrás en vez de a donde clickeaste.
+##
+## Se cachean los RID una vez: `_raycast` corre en CADA frame para el cursor, y
+## un `get_nodes_in_group` por frame es caro al pedo.
+var _rids_barrera: Array[RID] = []
+
+func _cachear_barreras() -> void:
+	_rids_barrera.clear()
+	for nodo in get_tree().get_nodes_in_group("barrera"):
+		var cuerpo := nodo as CollisionObject3D
+		if cuerpo != null:
+			_rids_barrera.append(cuerpo.get_rid())
+
+
 func _raycast(mouse_pos: Vector2) -> Dictionary:
 	var cam    = get_viewport().get_camera_3d()
 	var space  = get_world_3d().direct_space_state
 	var origin = cam.project_ray_origin(mouse_pos)
 	var end    = origin + cam.project_ray_normal(mouse_pos) * 1000.0
 	var query  = PhysicsRayQueryParameters3D.create(origin, end)
+	var excluir := _rids_barrera.duplicate()
 	if local_player:
-		query.exclude = [local_player.get_rid()]
+		excluir.append(local_player.get_rid())
+	query.exclude = excluir
 	return space.intersect_ray(query)

@@ -215,6 +215,32 @@ un pueblo oscuro van luces realtime + oclusión.
 **[ABIERTO]** Qué pack de assets usar. Pendiente: buscar opciones
 medieval-oscuro-abandonado que sean livianas para web.
 
+### 6.1 Construido (2026-09-01) — **[HECHO, a falta de navmesh]**
+
+Existe `maps/map_01/arena.tscn` + `arena_pruebas.tscn`. **El §6 dejó de ser una
+decisión y pasó a ser una escena.** Detalle técnico en `CLAUDE.md → La arena`.
+
+La planta sale directamente de dos reglas que ya estaban escritas acá:
+
+- **De §15.11b, *"pegarle al boss tiene que dejarte expuesto"*:** la plaza central
+  es el único lugar iluminado y sin cobertura del mapa, con cuatro entradas para
+  que nadie la pueda cerrar solo. El anillo exterior es oscuro y es donde están
+  los nidos. Farmear es lo seguro **y por eso mismo te aleja de ganar**: las dos
+  condiciones de victoria pelean entre sí en el espacio, no sólo en el reloj.
+- **De §6, la oscuridad como mecánica:** la perilla que más cambió la sensación no
+  fue la luz sino **la niebla** (de 45 a 120 en vez de 90 a 190). Es la que recorta
+  la visión de verdad; el ambiente y la luna son atmósfera.
+
+**Lo que aprendimos midiendo, y corrige una intuición de este documento:** con la
+cámara en brazo 5–20 ves ~40 unidades y el mapa mide 200×200, así que **los dos
+jugadores ya son invisibles entre sí casi todo el tiempo sin que construyamos
+nada.** El problema de diseño no era agregar escondites — es el inverso:
+**controlar cuándo sí se ven.** Por eso importan más las líneas de visión largas
+(la diagonal despejada entre spawns, que pasa por la plaza) que el cover.
+
+**Lo que falta antes de poder probar la carrera de §15.11b:** el navmesh. Hoy ni
+el jugador ni los enemigos rodean un obstáculo, y la arena está llena de muros.
+
 ---
 
 ## 7. Los cuatro ejes abiertos

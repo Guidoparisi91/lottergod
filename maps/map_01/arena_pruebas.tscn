@@ -1,0 +1,139 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/boss/goblin_king.tscn" id="boss"]
+[ext_resource type="Script" uid="uid://ccn3xsbfgnpc8" path="res://shared/iso_camera.gd" id="camera_script"]
+[ext_resource type="PackedScene" path="res://enemies/goblin/enemy.tscn" id="goblin"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="hud"]
+[ext_resource type="PackedScene" path="res://maps/map_01/arena.tscn" id="pueblo"]
+[ext_resource type="Script" uid="uid://b2lfyb622u6dl" path="res://systems/wave_manager.gd" id="wave_script"]
+[ext_resource type="Script" uid="uid://bgwbu85r1hhjs" path="res://maps/map_01/world.gd" id="world_script"]
+[ext_resource type="Script" path="res://addons/zylann.hterrain/hterrain.gd" id="hterrain_script"]
+[ext_resource type="Resource" path="res://maps/map_01/terreno/data.hterrain" id="terreno_data"]
+[ext_resource type="Script" path="res://addons/zylann.hterrain/hterrain_texture_set.gd" id="hterrain_texset"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Pasto/Grass004_1K-PNG_Color.png" id="tex_pasto"]
+[ext_resource type="Texture2D" path="res://assets/Textures/Tierra/tierra_base.png" id="tex_tierra"]
+[ext_resource type="Script" path="res://enemies/enemy_pit.gd" id="pit_script"]
+
+[sub_resource type="Resource" id="terreno_texset"]
+script = ExtResource("hterrain_texset")
+mode = 0
+textures = [[ExtResource("tex_pasto"), ExtResource("tex_tierra")], [null, null]]
+
+[sub_resource type="ProceduralSkyMaterial" id="cielo_mat"]
+sky_top_color = Color(0.02, 0.03, 0.07, 1)
+sky_horizon_color = Color(0.09, 0.11, 0.17, 1)
+sky_curve = 0.18
+ground_bottom_color = Color(0.02, 0.02, 0.03, 1)
+ground_horizon_color = Color(0.09, 0.11, 0.17, 1)
+ground_curve = 0.05
+
+[sub_resource type="Sky" id="cielo"]
+sky_material = SubResource("cielo_mat")
+
+[sub_resource type="Environment" id="env_pruebas"]
+background_mode = 2
+sky = SubResource("cielo")
+ambient_light_source = 2
+ambient_light_color = Color(0.22, 0.28, 0.45, 1)
+ambient_light_energy = 0.07
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.05, 0.06, 0.11, 1)
+fog_density = 0.0
+fog_sky_affect = 0.0
+fog_depth_curve = 2.0
+fog_depth_begin = 45.0
+fog_depth_end = 120.0
+
+[node name="World" type="Node3D" unique_id=305143245]
+script = ExtResource("world_script")
+
+[node name="Terreno" type="Node3D" parent="." unique_id=1100582611]
+script = ExtResource("hterrain_script")
+map_scale = Vector3(2, 1, 2)
+centered = true
+_terrain_data = ExtResource("terreno_data")
+chunk_size = 32
+collision_enabled = true
+collision_layer = 1
+collision_mask = 1
+shader_type = "Classic4Lite"
+texture_set = SubResource("terreno_texset")
+render_layers = 1
+cast_shadow = 1
+shader_params/u_ground_uv_scale = 12
+shader_params/u_depth_blending = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1286739722]
+environment = SubResource("env_pruebas")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1802250369]
+transform = Transform3D(-0.8660239, -0.43301567, 0.2500004, 0, 0.49999797, 0.86602616, -0.50000304, 0.7499993, -0.43301004, 0, 0, 0)
+light_energy = 0.22
+light_color = Color(0.62, 0.72, 1, 1)
+shadow_enabled = true
+shadow_blur = 2.0
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 256.0
+
+[node name="IsoCamera" type="Camera3D" parent="." unique_id=59859658]
+script = ExtResource("camera_script")
+
+[node name="HUD" parent="." unique_id=1533190008 instance=ExtResource("hud")]
+
+[node name="Arena" parent="." unique_id=754819446 instance=ExtResource("pueblo")]
+
+[node name="SpawnerGoblins" type="Node3D" parent="." unique_id=53445920]
+script = ExtResource("wave_script")
+enemy_scene = ExtResource("goblin")
+min_spawn_interval = 0.6
+spawn_radius_min = 25.0
+spawn_radius_max = 35.0
+max_alive_base = 8
+max_alive_per_wave = 2
+spawn_alerted = false
+
+[node name="GoblinKing" parent="." unique_id=68277092 instance=ExtResource("boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+body_scale = 6.0
+body_tint = Color(0.3491902, 0.025840001, 0.050708726, 0.48200002)
+speed = 4.0
+
+[node name="PlayerSpawn0" type="Marker3D" parent="." groups=["player_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80.0, 2, -80.0)
+
+[node name="PlayerSpawn1" type="Marker3D" parent="." groups=["player_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.0, 2, 80.0)
+
+[node name="NidoNoroeste" type="Node3D" parent="." groups=["enemy_pit"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60.0, 0, 60.0)
+script = ExtResource("pit_script")
+enemy_scene = ExtResource("goblin")
+max_enemies = 5
+patrol_size = Vector2(18, 18)
+spawn_interval = 6.0
+
+[node name="NidoSudeste" type="Node3D" parent="." groups=["enemy_pit"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.0, 0, -60.0)
+script = ExtResource("pit_script")
+enemy_scene = ExtResource("goblin")
+max_enemies = 5
+patrol_size = Vector2(18, 18)
+spawn_interval = 6.0
+
+[node name="NidoOeste" type="Node3D" parent="." groups=["enemy_pit"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -74.0, 0, -14.0)
+script = ExtResource("pit_script")
+enemy_scene = ExtResource("goblin")
+max_enemies = 4
+patrol_size = Vector2(18, 18)
+spawn_interval = 6.0
+
+[node name="NidoEste" type="Node3D" parent="." groups=["enemy_pit"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.0, 0, 14.0)
+script = ExtResource("pit_script")
+enemy_scene = ExtResource("goblin")
+max_enemies = 4
+patrol_size = Vector2(18, 18)
+spawn_interval = 6.0
+
