@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bgwbu85r1hhjs" path="res://maps/map_01/world.gd" id="world_script"]
+[ext_resource type="Script" uid="uid://ccn3xsbfgnpc8" path="res://shared/iso_camera.gd" id="camera_script"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="hud"]
+[ext_resource type="PackedScene" path="res://maps/taller/taller_mapa.tscn" id="mapa"]
+[ext_resource type="Script" path="res://maps/taller/cronometro.gd" id="cronometro_script"]
+
+[sub_resource type="ProceduralSkyMaterial" id="cielo_mat"]
+
+[sub_resource type="Sky" id="cielo"]
+sky_material = SubResource("cielo_mat")
+
+[sub_resource type="Environment" id="env_taller"]
+background_mode = 2
+sky = SubResource("cielo")
+ambient_light_source = 3
+ambient_light_energy = 0.6
+tonemap_mode = 4
+
+[node name="World" type="Node3D"]
+script = ExtResource("world_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_taller")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.8660239, -0.43301567, 0.2500004, 0, 0.49999797, 0.86602616, -0.50000304, 0.7499993, -0.43301004, 0, 0, 0)
+light_color = Color(1, 0.96, 0.9, 1)
+shadow_enabled = true
+directional_shadow_max_distance = 120.0
+
+[node name="IsoCamera" type="Camera3D" parent="."]
+script = ExtResource("camera_script")
+
+[node name="HUD" parent="." instance=ExtResource("hud")]
+
+[node name="Mapa" parent="." instance=ExtResource("mapa")]
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Cronometro" type="CanvasLayer" parent="."]
+script = ExtResource("cronometro_script")

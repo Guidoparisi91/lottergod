@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[sub_resource type="Shader" id="shader_damero"]
+code = "shader_type spatial;
+// Damero en coordenadas de MUNDO: cada cuadro mide 1 u pase lo que pase con la
+// escala o la posicion del piso. Sirve de regla para medir lo que se construye.
+uniform vec3 color_a : source_color = vec3(0.42, 0.46, 0.52);
+uniform vec3 color_b : source_color = vec3(0.52, 0.56, 0.62);
+varying vec3 pos_mundo;
+
+void vertex() {
+	pos_mundo = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+	vec2 celda = floor(pos_mundo.xz);
+	ALBEDO = mix(color_a, color_b, mod(celda.x + celda.y, 2.0));
+	ROUGHNESS = 0.9;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="mat_piso"]
+shader = SubResource("shader_damero")
+
+[sub_resource type="PlaneMesh" id="mesh_piso"]
+material = SubResource("mat_piso")
+size = Vector2(120, 120)
+
+[sub_resource type="BoxShape3D" id="forma_piso"]
+size = Vector3(120, 1, 120)
+
+[node name="TallerMapa" type="Node3D"]
+
+[node name="Piso" type="StaticBody3D" parent="."]
+
+[node name="Malla" type="MeshInstance3D" parent="Piso"]
+mesh = SubResource("mesh_piso")
+
+[node name="Colision" type="CollisionShape3D" parent="Piso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("forma_piso")
